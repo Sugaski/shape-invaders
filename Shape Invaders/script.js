@@ -16,8 +16,8 @@ window.addEventListener('resize', resizeCanvas);
 const player = {
     x: canvas.width / 2,
     y: canvas.height / 2,
-    size: 40,
-    speed: 5,
+    size: 35,
+    speed: 6,
     dx: 0,
     dy: 0,
     angle: 0
@@ -1564,10 +1564,18 @@ function moveBigBoss() {
         } else {
             bigBoss.launchCooldown--;
         }
+
+        // Check if big boss health has reached 0
+        if (bigBoss.health <= 0) {
+            bigBoss.defeated = true;
+            bigBoss.shakeTime = 300; // 5 seconds at 60 FPS
+            bigBoss.projectiles = []; // Clear all projectiles
+            //console.log("Big boss defeated, projectiles cleared");
+        }
     }
 
-    // Move projectiles regardless of boss state
-    if (bigBoss) {
+    // Move projectiles only if big boss is not defeated
+    if (bigBoss && !bigBoss.defeated) {
         const currentTime = Date.now();
         bigBoss.projectiles.forEach(proj => {
             const angle = Math.atan2(player.y - proj.y, player.x - proj.x);
@@ -1838,6 +1846,3 @@ function initializeTopPlayers() {
 }
 
 initializeTopPlayers();
-
-
-
