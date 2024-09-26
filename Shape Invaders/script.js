@@ -39,9 +39,9 @@ let currentPowerup = null;
 let powerupEndTime = 0;
 
 const BIG_BOSS_SPAWN_INTERVAL = 5; 
-const STAGE_ONE_BOSS_SPAWN_INTERVAL = 10; // Spawn stage-one boss every 500 points
+const STAGE_ONE_BOSS_SPAWN_INTERVAL = 500; // Spawn stage-one boss every 500 points
 const ENEMY_SPAWN_CHANCE = 0.02;
-const POWERUP_DURATION = 15000; // 15 seconds
+const POWERUP_DURATION = 20000; // 20 seconds
 const POWERUP_FLASH_DURATION = 5000;
 
 
@@ -68,8 +68,8 @@ const ColorScheme = {
     },
     light: {
         text: '#000',
-        background: '#fff',
-        colors: ['#0a0', '#00a', '#a00', '#0aa']
+        background: '#FAF9F6',
+        colors: ['#4FAF44', '#FF5733', '#FF9526', '#FFC300', '#2A3492']
     },
     colorblind: {
         text: '#009e73',

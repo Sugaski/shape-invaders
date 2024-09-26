@@ -26,7 +26,7 @@ body.light-mode #settingsMenu,
 body.light-mode .modal-content,
 body.light-mode input,
 body.light-mode button {
-    background-color: #fff;
+    background-color: #FAF9F6;
     color: rgb(0, 0, 0);
     border-color: rgb(0, 0, 0);
 }
@@ -51,7 +51,7 @@ canvas {
 
 body.light-mode canvas {
     border-color: #000;
-    background-color: #fff;
+    background-color: #FAF9F6;
 }
 
 #menuScreen {
@@ -64,7 +64,7 @@ body.light-mode canvas {
 
 body.light-mode #menuScreen {
     color: #000;
-    background-color: #fff;
+    background-color: #FAF9F6;
 }
 
 body.colorblind-mode #menuScreen {
@@ -96,7 +96,7 @@ button, input {
 }
 
 body.light-mode button {
-    background-color: #fff;
+    background-color: #FAF9F6;
     color: #000;
     border-color: #000;
 }
@@ -114,7 +114,7 @@ button:hover {
 
 body.light-mode button:hover {
     background-color: #000;
-    color: #fff;
+    color: #FAF9F6;
 }
 
 body.colorblind-mode button:hover {
@@ -140,7 +140,7 @@ button:disabled {
 }
 
 body.light-mode .modal-content {
-    background-color: rgba(255, 255, 255, 0.8); 
+    background-color:#FAF9F6; 
     color: #000;
 }
 
@@ -191,7 +191,7 @@ input {
 
 body.light-mode #settingsMenu {
     color: #000;
-    background-color: #fff;
+    background-color: #FAF9F6;
     border-color: #000;
 }
 
@@ -248,7 +248,7 @@ body.colorblind-mode #settingsMenu h2 {
 }
 
 body.light-mode #settingsMenu button {
-    background-color: #fff;
+    background-color: #FAF9F6;
     color: #000;
     border-color: #000;
 }
@@ -266,7 +266,7 @@ body.colorblind-mode #settingsMenu button {
 
 body.light-mode #settingsMenu button:hover {
     background-color: #000;
-    color: #fff;
+    color: #FAF9F6;
 }
 
 body.colorblind-mode #settingsMenu button:hover {
