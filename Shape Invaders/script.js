@@ -177,8 +177,8 @@ function showExitConfirmation() {
 function showNamePrompt() {
     return new Promise((resolve, reject) => {
         const content = `
-            <h2>Enter Your Name</h2>
-            <input type="text" id="nameInput" style="width: 200px; margin: 20px auto;" maxlength="20">
+            <h2 style="color: ${ColorScheme.getTextColor()}; margin-bottom: 20px;">Enter Your Name</h2>
+            <input type="text" id="nameInput" style="width: 200px; margin: 20px auto; maxlength: 20;">
             <p id="nameError" style="color: red; display: none;">Invalid name. Use only letters, numbers, and spaces.</p>
             <button id="submitName">Submit</button>
         `;
@@ -188,23 +188,39 @@ function showNamePrompt() {
         const submitName = document.getElementById('submitName');
         const nameError = document.getElementById('nameError');
         
+        // Apply color scheme to input and button
+        applyColorModeToElement(nameInput);
+        applyColorModeToElement(submitName);
+        
+        // Additional styles for input
+        nameInput.style.padding = '10px';
+        nameInput.style.border = `2px solid ${ColorScheme.getTextColor()}`;
+        nameInput.style.borderRadius = '5px';
+        nameInput.style.outline = 'none';
+        nameInput.style.backgroundColor = ColorScheme.getBackgroundColor();
+        nameInput.style.color = ColorScheme.getTextColor();
+        
+        // Additional styles for button
+        submitName.style.padding = '10px 20px';
+        submitName.style.border = `2px solid ${ColorScheme.getTextColor()}`;
+        submitName.style.borderRadius = '5px';
+        submitName.style.cursor = 'pointer';
+        submitName.style.backgroundColor = ColorScheme.getBackgroundColor();
+        submitName.style.color = ColorScheme.getTextColor();
+        
         function validateAndSubmitName() {
             const name = nameInput.value.trim();
-            //console.log("Validating name:", name);
             const isValid = /^[A-Za-z0-9 ]+$/.test(name);
             
             if (isValid && name.length > 0) {
-                //console.log("Name is valid:", name);
                 document.body.removeChild(modal);
                 resolve(name);
             } else {
-                //console.log("Name is invalid");
                 nameError.style.display = 'block';
             }
         }
         
         function handleEscape() {
-            //console.log("Escape pressed, rejecting");
             document.body.removeChild(modal);
             resolve(null);
         }
@@ -301,6 +317,16 @@ function applyColorMode(mode) {
     // Regenerate colors for existing enemies
     enemies.forEach(enemy => {
         enemy.color = ColorScheme.getRandomColor();
+    });
+
+    // Reapply color scheme to any open modals
+    const modals = document.querySelectorAll('.modal-content');
+    modals.forEach(modal => {
+        applyColorModeToElement(modal);
+        const input = modal.querySelector('input');
+        const button = modal.querySelector('button');
+        if (input) applyColorModeToElement(input);
+        if (button) applyColorModeToElement(button);
     });
 }
 
