@@ -13,6 +13,8 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
+let lastMousePosition = { x: 0, y: 0 };
+
 const player = {
     x: canvas.width / 2,
     y: canvas.height / 2,
@@ -89,6 +91,29 @@ const ColorScheme = {
     }
 };
 
+function updateCustomCursor(position) {
+    if (!isGameRunning || isPaused) return;
+
+    ctx.save();
+    
+    // Outer glow
+    ctx.beginPath();
+    ctx.arc(position.x, position.y, 17, 0, Math.PI * 2);
+    ctx.strokeStyle = ColorScheme.getTextColor();
+    ctx.lineWidth = 1;
+    ctx.shadowColor = ColorScheme.getTextColor();
+    ctx.shadowBlur = 15;
+    ctx.stroke();
+    
+    // Inner ring
+    ctx.beginPath();
+    ctx.arc(position.x, position.y, 15, 0, Math.PI * 2);
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = 10;
+    ctx.stroke();
+    
+    ctx.restore();
+}
 function createModal(content, isExitModal = false) {
     const modal = document.createElement('div');
     modal.style.position = 'fixed';
@@ -1337,7 +1362,7 @@ function gameLoop(currentTime) {
             //console.log("Clearing canvas");
             ctx.fillStyle = ColorScheme.getBackgroundColor();
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
+            updateCustomCursor(lastMousePosition);    
             //console.log("Moving game objects");
             if (typeof movePlayer === 'function') movePlayer();
             if (typeof moveBullets === 'function') moveBullets();
@@ -1489,6 +1514,8 @@ canvas.addEventListener('mousemove', e => {
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
     player.angle = Math.atan2(mouseY - player.y, mouseX - player.x) + Math.PI / 2;
+    
+    lastMousePosition = { x: mouseX, y: mouseY };
 });
 
 window.addEventListener('error', function(e) {
