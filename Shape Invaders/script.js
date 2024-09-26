@@ -2,7 +2,7 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const MAX_ENEMIES = 15;
 
-console.log("MAX_ENEMIES defined as:", MAX_ENEMIES);
+//console.log("MAX_ENEMIES defined as:", MAX_ENEMIES);
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -64,10 +64,10 @@ const ColorScheme = {
     dark: {
         text: '#0f0',
         background: '#000',
-        colors: ['#0f0', '#00f', '#f00', '#0ff']
+        colors: ['#4FAF44', '#F6EB14', '#FF9526', '#EF4423', '#2A3492']
     },
     light: {
-        text: '#0a0',
+        text: '#000',
         background: '#fff',
         colors: ['#0a0', '#00a', '#a00', '#0aa']
     },
@@ -124,13 +124,13 @@ function showMenu() {
     gameState = 'menu';
     menuScreen.style.display = 'block';
     gameCanvas.style.display = 'none';
-    console.log("Menu shown. isPaused:", isPaused);
+    //console.log("Menu shown. isPaused:", isPaused);
 }
 
 function hideMenu() {
     menuScreen.style.display = 'none';
     gameCanvas.style.display = 'block';
-    console.log("Menu hidden. isPaused:", isPaused);
+    //console.log("Menu hidden. isPaused:", isPaused);
 }
 
 function initializeMenu() {
@@ -190,21 +190,21 @@ function showNamePrompt() {
         
         function validateAndSubmitName() {
             const name = nameInput.value.trim();
-            console.log("Validating name:", name);
+            //console.log("Validating name:", name);
             const isValid = /^[A-Za-z0-9 ]+$/.test(name);
             
             if (isValid && name.length > 0) {
-                console.log("Name is valid:", name);
+                //console.log("Name is valid:", name);
                 document.body.removeChild(modal);
                 resolve(name);
             } else {
-                console.log("Name is invalid");
+                //console.log("Name is invalid");
                 nameError.style.display = 'block';
             }
         }
         
         function handleEscape() {
-            console.log("Escape pressed, rejecting");
+            //console.log("Escape pressed, rejecting");
             document.body.removeChild(modal);
             resolve(null);
         }
@@ -274,14 +274,14 @@ function closeSettings() {
 }
 
 function resumeGame() {
-    console.log("Resuming game...");
+    //console.log("Resuming game...");
     isPaused = false;
     hideMenu();
     hideSettings();
     if (!animationFrameId) {
         animationFrameId = requestAnimationFrame(gameLoop);
     }
-    console.log("Game resumed. isPaused:", isPaused);
+    //console.log("Game resumed. isPaused:", isPaused);
 }
 
 function hideSettings() {
@@ -336,7 +336,7 @@ document.getElementById('colorblindMode').addEventListener('change', function() 
 });
 
 window.addEventListener('load', () => {
-    console.log("Window load event triggered");
+    //console.log("Window load event triggered");
     initializeMenu();
     loadSettings();
     showMenu();
@@ -344,7 +344,7 @@ window.addEventListener('load', () => {
 });
 
 function startNewGame() {
-    console.log("Starting new game...");
+    //console.log("Starting new game...");
     showNamePrompt()
         .then(name => {
             if (name) {
@@ -362,7 +362,7 @@ function startNewGame() {
 }
 
 function startGame() {
-    console.log("Starting game...");
+    //console.log("Starting game...");
     loadSettings();
     hideMenu();
     resetGame();
@@ -375,7 +375,7 @@ function startGame() {
 }
 
 function resetGame() {
-    console.log("Resetting game...");
+    //console.log("Resetting game...");
     player.x = canvas.width / 2;
     player.y = canvas.height / 2;
     player.angle = 0;
@@ -400,7 +400,7 @@ function resetGame() {
 }
 
 function gameOver() {
-    console.log("Game Over function called");
+    //console.log("Game Over function called");
     isGameRunning = false;
     isPaused = true;
     if (animationFrameId) {
@@ -418,23 +418,18 @@ function gameOver() {
 }
 
 function showGameOverScreen() {
-    // Clear the canvas
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Fill the screen with a semi-transparent black background only in dark mode
     if (ColorScheme.current === 'dark' || ColorScheme.current === 'colorblind') {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     
-    // Set text alignment to center
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    
-    // Set the font for "GAME OVER"
     ctx.font = '48px "Press Start 2P", cursive';
     
-    // Calculate the vertical center of the canvas
     const centerY = canvas.height / 2;
     
     // Add neon glow effect
@@ -512,7 +507,7 @@ function spawnMiniBoss() {
             dy: Math.sin(angle) * speed,
             color: ColorScheme.getRandomColor()
         });
-        console.log("Mini-boss spawned. Total mini-bosses:", miniBosses.length);
+        //console.log("Mini-boss spawned. Total mini-bosses:", miniBosses.length);
     }
 }
 
@@ -585,13 +580,13 @@ function checkMiniBossCollisions() {
                 createExplosion(bullet.x, bullet.y);
                 bullets.splice(j, 1);
                 boss.health--;
-                console.log("Mini-boss hit. Remaining health:", boss.health);
+                //console.log("Mini-boss hit. Remaining health:", boss.health);
                 if (boss.health <= 0) {
                     createExplosion(boss.x, boss.y);
                     destroyMiniBoss(i);
                     score += 50;
                     spawnPowerup(boss.x, boss.y);
-                    console.log("Mini-boss destroyed. Total destroyed:", miniBossesDestroyed);
+                    //console.log("Mini-boss destroyed. Total destroyed:", miniBossesDestroyed);
                 }
                 break;
             }
@@ -604,8 +599,8 @@ function destroyMiniBoss(index) {
     miniBossesDestroyed++;
     miniBossesDefeated++; // Add this line
     score += 50;
-    console.log("Mini-boss destroyed. Total destroyed:", miniBossesDestroyed);
-    console.log("Mini-bosses defeated:", miniBossesDefeated); // Add this line
+    //console.log("Mini-boss destroyed. Total destroyed:", miniBossesDestroyed);
+    //console.log("Mini-bosses defeated:", miniBossesDefeated); // Add this line
 }
 
 function spawnPowerup(x, y) {
@@ -691,7 +686,7 @@ function activatePowerup(type) {
     currentPowerup = type;
     powerupEndTime = Date.now() + POWERUP_DURATION;
     if (type === 3) {
-        console.log("Honing Missiles powerup activated");
+        //console.log("Honing Missiles powerup activated");
     }
 }
 
@@ -898,7 +893,7 @@ function drawTopPlayers() {
         const player = topPlayers[i] || { name: '---', score: 0 };
         ctx.fillText(`${i + 1}. ${player.name}: ${player.score}`, canvas.width - 10, 60 + i * 25);
     }
-    console.log("Drawing top players:", topPlayers); // For debugging
+    //console.log("Drawing top players:", topPlayers); // For debugging
 }
 
 function drawBossCounters() {
@@ -909,11 +904,11 @@ function drawBossCounters() {
     const bottomPadding = 10;
     const rightPadding = 10;
     
-    ctx.fillText(`Mini-Bosses Destroyed: ${miniBossesDestroyed}`, 
+    ctx.fillText(`Stage 1 Bosses Destroyed: ${miniBossesDestroyed}`, 
         canvas.width - rightPadding, 
         canvas.height - bottomPadding - 20);
     
-    ctx.fillText(`Big Bosses Destroyed: ${bigBossesDestroyed}`, 
+    ctx.fillText(`Stage 2 Bosses Destroyed: ${bigBossesDestroyed}`, 
         canvas.width - rightPadding, 
         canvas.height - bottomPadding);
 }
@@ -967,9 +962,9 @@ function moveParticles() {
 }
 
 function spawnEnemy() {
-    console.log("Current enemy count:", enemies.length);
+    //console.log("Current enemy count:", enemies.length);
     if (enemies.length >= MAX_ENEMIES) {
-        console.log("Maximum enemies reached, not spawning new enemy");
+        //console.log("Maximum enemies reached, not spawning new enemy");
         return; // Don't spawn if we've reached the maximum
     }
 
@@ -993,7 +988,7 @@ function spawnEnemy() {
 
 function spawnEnemies(count) {
     const spawnCount = Math.min(count, MAX_ENEMIES - enemies.length);
-    console.log(`Spawning ${spawnCount} enemies`);
+    //console.log(`Spawning ${spawnCount} enemies`);
     for (let i = 0; i < spawnCount; i++) {
         spawnEnemy();
     }
@@ -1119,12 +1114,12 @@ function checkCollisions() {
                             
                             // Damage the big boss
                             bigBoss.health--;
-                            console.log("Big boss hit! Remaining health:", bigBoss.health);
+                            //console.log("Big boss hit! Remaining health:", bigBoss.health);
                             
                             if (bigBoss.health <= 0) {
                                 bigBoss.defeated = true;
                                 bigBoss.shakeTime = 300; // 5 seconds at 60 FPS
-                                console.log("Big boss defeated!");
+                                //console.log("Big boss defeated!");
                             }
                         }
                     }
@@ -1235,9 +1230,9 @@ function resetPlayerPosition() {
 }
 
 function updateTopPlayers() {
-    console.log("Updating top players. Current score:", score, "Player name:", player.name);
+    //console.log("Updating top players. Current score:", score, "Player name:", player.name);
     if (!player.name) {
-        console.log("Player name is undefined, skipping update");
+        //console.log("Player name is undefined, skipping update");
         return;
     }
 
@@ -1259,20 +1254,20 @@ function updateTopPlayers() {
     topPlayers = topPlayers.slice(0, 5);
 
     localStorage.setItem('topPlayers', JSON.stringify(topPlayers));
-    console.log("Updated top players:", topPlayers);
+    //console.log("Updated top players:", topPlayers);
 }
 
 function updateHighScore() {
     if (score > highScore) {
         highScore = score;
         localStorage.setItem('highScore', highScore);
-        console.log("New high score:", highScore);
+        //console.log("New high score:", highScore);
     }
 }
 
 function togglePause() {
     isPaused = !isPaused;
-    console.log("Game paused state toggled. isPaused:", isPaused);
+    //console.log("Game paused state toggled. isPaused:", isPaused);
     if (isPaused) {
         showMenu();
     } else {
@@ -1282,11 +1277,11 @@ function togglePause() {
 }
 
 function startGameLoop() {
-    console.log("Starting game loop...");
+    //console.log("Starting game loop...");
     isGameRunning = true;
     isPaused = false;
     lastFireTime = 0;
-    console.log("Game started. isPaused:", isPaused);
+    //console.log("Game started. isPaused:", isPaused);
     gameLoop();
     updateContinueButton();
 }
@@ -1308,15 +1303,15 @@ function gameLoop(currentTime) {
         return;
     }
 
-    console.log("Game loop iteration started");
+    //console.log("Game loop iteration started");
     if (!isPaused) {
-        console.log("Game is not paused, executing game logic");
+        //console.log("Game is not paused, executing game logic");
         try {
-            console.log("Clearing canvas");
+            //console.log("Clearing canvas");
             ctx.fillStyle = ColorScheme.getBackgroundColor();
             ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-            console.log("Moving game objects");
+            //console.log("Moving game objects");
             if (typeof movePlayer === 'function') movePlayer();
             if (typeof moveBullets === 'function') moveBullets();
             if (typeof moveEnemies === 'function') moveEnemies();
@@ -1325,18 +1320,18 @@ function gameLoop(currentTime) {
             if (typeof moveBigBoss === 'function') moveBigBoss();
             if (typeof moveBigBossProjectiles === 'function') moveBigBossProjectiles();
                 
-            console.log("Spawning entities");
+            //console.log("Spawning entities");
             if (typeof spawnEnemy === 'function') spawnEnemy();
             if (typeof spawnMiniBoss === 'function') spawnMiniBoss();
                 
-            console.log("Checking collisions");
+            //console.log("Checking collisions");
             if (typeof checkCollisions === 'function') checkCollisions();
             if (typeof checkMiniBossCollisions === 'function') checkMiniBossCollisions();
             if (typeof checkBigBossProjectileCollisions === 'function') checkBigBossProjectileCollisions();
             if (typeof checkBigBossCollisions === 'function') checkBigBossCollisions();
             if (typeof checkPowerupCollisions === 'function') checkPowerupCollisions();
                 
-            console.log("Updating game state");
+            //console.log("Updating game state");
             if (typeof updatePowerup === 'function') updatePowerup();
             if (typeof updatePowerups === 'function') updatePowerups();
             if (typeof updateHoningMissiles === 'function') updateHoningMissiles();
@@ -1346,7 +1341,7 @@ function gameLoop(currentTime) {
                 lastFireTime = currentTime;
             }
 
-            console.log("Drawing game objects");
+            //console.log("Drawing game objects");
             if (typeof drawPlayer === 'function') drawPlayer();
             if (typeof drawBullets === 'function') drawBullets();
             if (typeof drawEnemies === 'function') drawEnemies();
@@ -1360,21 +1355,21 @@ function gameLoop(currentTime) {
             if (typeof drawTopPlayers === 'function') drawTopPlayers();
             drawBossCounters();
 
-            console.log("Current miniBossesDefeated:", miniBossesDefeated);
-            console.log("Big boss exists:", !!bigBoss);
-            console.log("Current score:", score);
+            //console.log("Current miniBossesDefeated:", miniBossesDefeated);
+            //console.log("Big boss exists:", !!bigBoss);
+            //console.log("Current score:", score);
 
             checkBigBossSpawn();
 
             if (bigBoss) {
-                console.log("Updating big boss");
+                //console.log("Updating big boss");
                 moveBigBoss();
                 drawBigBoss();
 
                 if (bigBoss.health <= 0 && !bigBoss.defeated) {
                     bigBoss.defeated = true;
                     bigBoss.shakeTime = 300; // 5 seconds at 60 FPS
-                    console.log("Big boss defeated, starting shake animation");
+                    //console.log("Big boss defeated, starting shake animation");
                 }
 
                 if (bigBoss.defeated) {
@@ -1393,7 +1388,7 @@ function gameLoop(currentTime) {
                         updateTopPlayers();
                         bigBoss = null;
                         resetAfterBigBoss();
-                        console.log("Big boss exploded and removed. Total big bosses destroyed:", bigBossesDestroyed);
+                        //console.log("Big boss exploded and removed. Total big bosses destroyed:", bigBossesDestroyed);
                     }
                 }
             }
@@ -1409,22 +1404,22 @@ function gameLoop(currentTime) {
             isGameRunning = false;
         }
     } else {
-        console.log("Game is paused, skipping game logic");
+        //console.log("Game is paused, skipping game logic");
     }
 
-    console.log("Requesting next animation frame");
+    //console.log("Requesting next animation frame");
     animationFrameId = requestAnimationFrame(gameLoop);
 }
 
 function checkBigBossSpawn() {
-    console.log("Checking big boss spawn conditions:");
-    console.log("miniBossesDefeated:", miniBossesDefeated);
-    console.log("bigBoss exists:", !!bigBoss);
+    //console.log("Checking big boss spawn conditions:");
+    //console.log("miniBossesDefeated:", miniBossesDefeated);
+    //console.log("bigBoss exists:", !!bigBoss);
     if (!bigBoss && miniBossesDefeated >= 4) {
-        console.log("Conditions met for big boss spawn");
+        //console.log("Conditions met for big boss spawn");
         spawnBigBoss();
     } else {
-        console.log("Conditions not met for big boss spawn");
+        //console.log("Conditions not met for big boss spawn");
     }
 }
 
@@ -1479,7 +1474,7 @@ window.addEventListener('error', function(e) {
     alert("An error occurred. Please check the console for details.");
 });
 
-console.log("Script loaded. BIG_BOSS_SPAWN_INTERVAL:", BIG_BOSS_SPAWN_INTERVAL);
+//console.log("Script loaded. BIG_BOSS_SPAWN_INTERVAL:", BIG_BOSS_SPAWN_INTERVAL);
 
 // Add these global variables if they're not already present
 let pausedPowerups = [];
@@ -1487,7 +1482,7 @@ let powerupsPausedTime = 0;
 
 // Define the pausePowerups function
 function pausePowerups() {
-    console.log("Pausing powerups");
+    //console.log("Pausing powerups");
     if (currentPowerup) {
         pausedPowerups.push({
             type: currentPowerup,
@@ -1501,13 +1496,13 @@ function pausePowerups() {
 
 // Define the clearFieldPowerups function
 function clearFieldPowerups() {
-    console.log("Clearing field powerups");
+    //console.log("Clearing field powerups");
     powerups = [];
 }
 
 // Define the resumePowerups function
 function resumePowerups() {
-    console.log("Resuming powerups");
+    //console.log("Resuming powerups");
     const pauseDuration = Date.now() - powerupsPausedTime;
     if (pausedPowerups.length > 0) {
         const powerup = pausedPowerups.pop();
@@ -1522,7 +1517,7 @@ function resumePowerups() {
 
 // Modify the spawnBigBoss function
 function spawnBigBoss() {
-    console.log("spawnBigBoss function called. miniBossesDefeated:", miniBossesDefeated);
+    //console.log("spawnBigBoss function called. miniBossesDefeated:", miniBossesDefeated);
     if (!bigBoss && miniBossesDefeated >= 4) {
         bigBoss = {
             x: canvas.width / 2,
@@ -1541,7 +1536,7 @@ function spawnBigBoss() {
             defeated: false,
             projectiles: []
         };
-        console.log("Big boss spawned:", bigBoss);
+        //console.log("Big boss spawned:", bigBoss);
         
         // Clear all enemies and mini-bosses
         enemies = [];
@@ -1551,7 +1546,7 @@ function spawnBigBoss() {
         pausePowerups();
         clearFieldPowerups();
     } else {
-        console.log("Not spawning big boss. Current conditions: bigBoss exists:", !!bigBoss, "miniBossesDefeated:", miniBossesDefeated);
+        //console.log("Not spawning big boss. Current conditions: bigBoss exists:", !!bigBoss, "miniBossesDefeated:", miniBossesDefeated);
     }
 }
 
@@ -1609,7 +1604,7 @@ function getRandomNeonColor() {
     return neonColors[Math.floor(Math.random() * neonColors.length)];
 }
 
-// Modify the drawBigBoss function
+
 function drawBigBoss() {
     if (bigBoss) {
         ctx.save();
@@ -1722,49 +1717,37 @@ function gameOver() {
 }
 
 function showGameOverScreen() {
-    // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Fill the screen with a semi-transparent black background only in dark mode
     if (ColorScheme.current === 'dark' || ColorScheme.current === 'colorblind') {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     
-    // Set text alignment to center
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    
-    // Set the font for "GAME OVER"
     ctx.font = '48px "Press Start 2P", cursive';
     
-    // Calculate the vertical center of the canvas
     const centerY = canvas.height / 2;
     
-    // Add neon glow effect
     ctx.shadowColor = ColorScheme.getTextColor();
     ctx.shadowBlur = 10;
     
-    // Draw "GAME OVER"
     ctx.fillStyle = ColorScheme.getTextColor();
     ctx.fillText('GAME OVER', canvas.width / 2, centerY - 40);
     
-    // Set the font for "Press SPACE to continue"
     ctx.font = '24px "Press Start 2P", cursive';
     
-    // Draw "Press SPACE to continue"
     ctx.fillText('Press SPACE to continue', canvas.width / 2, centerY + 40);
     
-    // Reset shadow blur
     ctx.shadowBlur = 0;
     
-    // Add event listener for space key
     window.addEventListener('keydown', handleGameOverKeyPress);
 }
 
 function handleGameOverKeyPress(e) {
     if (e.code === 'Space') {
-        e.preventDefault(); // Prevent any default space key behavior
+        e.preventDefault(); 
         window.removeEventListener('keydown', handleGameOverKeyPress);
         startNewGame();
     }
@@ -1814,17 +1797,16 @@ function resetGame() {
 }
 
 function resetAfterBigBoss() {
-    console.log("Resetting game state after big boss defeat");
+    //console.log("Resetting game state after big boss defeat");
     miniBossesDefeated = 0;
     resumePowerups();
-    // Spawn new enemies and mini-bosses
-    spawnEnemies(10); // Spawn 10 new enemies
-    spawnMiniBoss(); // Attempt to spawn a new mini-boss
+    spawnEnemies(15);
+    spawnMiniBoss(); 
 }
 
 function spawnEnemies(count) {
     const spawnCount = Math.min(count, MAX_ENEMIES - enemies.length);
-    console.log(`Spawning ${spawnCount} enemies`);
+    //console.log(`Spawning ${spawnCount} enemies`);
     for (let i = 0; i < spawnCount; i++) {
         spawnEnemy();
     }
@@ -1840,22 +1822,14 @@ function drawTopPlayers() {
         const player = topPlayers[i] || { name: '---', score: 0 };
         ctx.fillText(`${i + 1}. ${player.name}: ${player.score}`, canvas.width - 10, 60 + i * 25);
     }
-    console.log("Drawing top players:", topPlayers); // For debugging
+    //console.log("Drawing top players:", topPlayers); // For debugging
 }
 
 function initializeTopPlayers() {
     topPlayers = JSON.parse(localStorage.getItem('topPlayers')) || [];
-    console.log("Initialized top players:", topPlayers);
+    //console.log("Initialized top players:", topPlayers);
 }
 
-// For testing: Reset top players
-function resetTopPlayers() {
-    topPlayers = [];
-    localStorage.removeItem('topPlayers');
-    console.log("Reset top players. topPlayers is now empty.");
-}
-
-// Call this when your game initializes
 initializeTopPlayers();
 
 

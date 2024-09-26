@@ -27,8 +27,8 @@ body.light-mode .modal-content,
 body.light-mode input,
 body.light-mode button {
     background-color: #fff;
-    color: #0a0;
-    border-color: #0a0;
+    color: rgb(0, 0, 0);
+    border-color: rgb(0, 0, 0);
 }
 
 /* Colorblind mode */
@@ -57,14 +57,14 @@ body.light-mode canvas {
 #menuScreen {
     text-align: center;
     color: #fff;
-    transition: color 0.3s, background-color 0.3s; /* Added background-color transition */
+    transition: color 0.3s, background-color 0.3s;
     padding: 20px;
     border-radius: 10px;
 }
 
 body.light-mode #menuScreen {
     color: #000;
-    background-color: #fff; /* Added white background for light mode */
+    background-color: #fff;
 }
 
 body.colorblind-mode #menuScreen {
@@ -78,11 +78,11 @@ h1 {
 }
 
 body.light-mode h1 {
-    text-shadow: 0 0 10px #0a0, 0 0 20px #0a0, 0 0 30px #0a0;
+    text-shadow: 0 0 10px rgb(0, 0, 0), 0 0 20px rgb(0, 0, 0), 0 0 30px rgb(0, 0, 0);
 }
 
 body.colorblind-mode h1 {
-    text-shadow: 0 0 10px #ff0, 0 0 20px #ff0, 0 0 30px #ff0;
+    text-shadow: 0 0 10px #009e73, 0 0 20px #009e73, 0 0 30px #009e73;
 }
 
 button, input {
@@ -98,13 +98,13 @@ button, input {
 body.light-mode button {
     background-color: #fff;
     color: #000;
-    border-color: #0a0;
+    border-color: #000;
 }
 
 body.colorblind-mode button {
     background-color: #000;
     color: #fff;
-    border-color: #ff0;
+    border-color: #009e73;
 }
 
 button:hover {
@@ -113,12 +113,12 @@ button:hover {
 }
 
 body.light-mode button:hover {
-    background-color: #0a0;
+    background-color: #000;
     color: #fff;
 }
 
 body.colorblind-mode button:hover {
-    background-color: #ff0;
+    background-color: #009e73;
     color: #000;
 }
 
@@ -136,11 +136,11 @@ button:disabled {
     align-items: center;
     text-align: center;
     background-color: rgba(0, 0, 0, 0.8);
-    transition: background-color 0.3s; /* Added transition for smooth color change */
+    transition: background-color 0.3s;
 }
 
 body.light-mode .modal-content {
-    background-color: rgba(255, 255, 255, 0.8); /* Light background for modals in light mode */
+    background-color: rgba(255, 255, 255, 0.8); 
     color: #000;
 }
 
@@ -190,15 +190,15 @@ input {
 }
 
 body.light-mode #settingsMenu {
-    color: #0a0;
-    background-color: #fff; /* Changed from rgba(255, 255, 255, 0.8) to solid white */
-    border-color: #0a0;
+    color: #000;
+    background-color: #fff;
+    border-color: #000;
 }
 
 body.colorblind-mode #settingsMenu {
-    color: #ff0;
+    color: #009e73;
     background-color: rgba(0, 0, 0, 0.8);
-    border-color: #ff0;
+    border-color: #009e73;
 }
 
 #settingsMenu h2 {
@@ -208,11 +208,11 @@ body.colorblind-mode #settingsMenu {
 }
 
 body.light-mode #settingsMenu h2 {
-    text-shadow: 0 0 5px #0a0, 0 0 10px #0a0;
+    text-shadow: 0 0 5px #000, 0 0 10px #000;
 }
 
 body.colorblind-mode #settingsMenu h2 {
-    text-shadow: 0 0 5px #ff0, 0 0 10px #ff0;
+    text-shadow: 0 0 5px #009e73, 0 0 10px #009e73;
 }
 
 #settingsMenu label {
@@ -249,14 +249,14 @@ body.colorblind-mode #settingsMenu h2 {
 
 body.light-mode #settingsMenu button {
     background-color: #fff;
-    color: #0a0;
-    border-color: #0a0;
+    color: #000;
+    border-color: #000;
 }
 
 body.colorblind-mode #settingsMenu button {
     background-color: #000;
-    color: #ff0;
-    border-color: #ff0;
+    color: #009e73;
+    border-color: #009e73;
 }
 
 #settingsMenu button:hover {
@@ -265,11 +265,11 @@ body.colorblind-mode #settingsMenu button {
 }
 
 body.light-mode #settingsMenu button:hover {
-    background-color: #0a0;
+    background-color: #000;
     color: #fff;
 }
 
 body.colorblind-mode #settingsMenu button:hover {
-    background-color: #ff0;
+    background-color: #009e73;
     color: #000;
 }
