@@ -1,0 +1,275 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #000;
+    overflow: hidden;
+    font-family: 'Press Start 2P', cursive;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Dark mode (default) */
+body, canvas, #menuScreen, #settingsMenu, .modal-content, input, button {
+    background-color: #000;
+    color: #0f0;
+    border-color: #0f0;
+}
+
+/* Light mode */
+body.light-mode,
+body.light-mode canvas,
+body.light-mode #menuScreen,
+body.light-mode #settingsMenu,
+body.light-mode .modal-content,
+body.light-mode input,
+body.light-mode button {
+    background-color: #fff;
+    color: #0a0;
+    border-color: #0a0;
+}
+
+/* Colorblind mode */
+body.colorblind-mode,
+body.colorblind-mode canvas,
+body.colorblind-mode #menuScreen,
+body.colorblind-mode #settingsMenu,
+body.colorblind-mode .modal-content,
+body.colorblind-mode input,
+
+body.colorblind-mode canvas {
+    background-color: #000000; 
+}
+
+canvas {
+    border: 1px solid;
+    display: none;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+body.light-mode canvas {
+    border-color: #000;
+    background-color: #fff;
+}
+
+#menuScreen {
+    text-align: center;
+    color: #fff;
+    transition: color 0.3s, background-color 0.3s; /* Added background-color transition */
+    padding: 20px;
+    border-radius: 10px;
+}
+
+body.light-mode #menuScreen {
+    color: #000;
+    background-color: #fff; /* Added white background for light mode */
+}
+
+body.colorblind-mode #menuScreen {
+    color: #fff;
+}
+
+h1 {
+    font-size: 48px;
+    margin-bottom: 40px;
+    text-shadow: 0 0 10px #0f0, 0 0 20px #0f0, 0 0 30px #0f0;
+}
+
+body.light-mode h1 {
+    text-shadow: 0 0 10px #0a0, 0 0 20px #0a0, 0 0 30px #0a0;
+}
+
+body.colorblind-mode h1 {
+    text-shadow: 0 0 10px #ff0, 0 0 20px #ff0, 0 0 30px #ff0;
+}
+
+button, input {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 14px;
+    margin: 10px;
+    padding: 10px 20px;
+    border: 2px solid;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+body.light-mode button {
+    background-color: #fff;
+    color: #000;
+    border-color: #0a0;
+}
+
+body.colorblind-mode button {
+    background-color: #000;
+    color: #fff;
+    border-color: #ff0;
+}
+
+button:hover {
+    background-color: #0f0;
+    color: #000;
+}
+
+body.light-mode button:hover {
+    background-color: #0a0;
+    color: #fff;
+}
+
+body.colorblind-mode button:hover {
+    background-color: #ff0;
+    color: #000;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.modal-content {
+    min-width: 300px;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.8);
+    transition: background-color 0.3s; /* Added transition for smooth color change */
+}
+
+body.light-mode .modal-content {
+    background-color: rgba(255, 255, 255, 0.8); /* Light background for modals in light mode */
+    color: #000;
+}
+
+input {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 14px;
+    padding: 5px;
+    background-color: #000;
+    color: #0f0;
+    border: 2px solid #0f0;
+}
+
+* {
+    font-family: 'Press Start 2P', cursive;
+}
+
+.modal-content button {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 14px;
+    margin: 10px;
+    padding: 10px 20px;
+    background-color: #000;
+    color: #0f0;
+    border: 2px solid #0f0;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.modal-content button:hover {
+    background-color: #0f0;
+    color: #000;
+}
+
+#settingsMenu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #0f0;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border: 2px solid #0f0;
+    border-radius: 10px;
+    transition: all 0.3s;
+    z-index: 1000;
+}
+
+body.light-mode #settingsMenu {
+    color: #0a0;
+    background-color: #fff; /* Changed from rgba(255, 255, 255, 0.8) to solid white */
+    border-color: #0a0;
+}
+
+body.colorblind-mode #settingsMenu {
+    color: #ff0;
+    background-color: rgba(0, 0, 0, 0.8);
+    border-color: #ff0;
+}
+
+#settingsMenu h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
+}
+
+body.light-mode #settingsMenu h2 {
+    text-shadow: 0 0 5px #0a0, 0 0 10px #0a0;
+}
+
+body.colorblind-mode #settingsMenu h2 {
+    text-shadow: 0 0 5px #ff0, 0 0 10px #ff0;
+}
+
+#settingsMenu label {
+    display: block;
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+#settingsMenu .radio-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
+}
+
+#settingsMenu .radio-group label {
+    margin-right: 10px;
+}
+
+#settingsMenu input[type="radio"] {
+    margin: 0;
+}
+
+#settingsMenu button {
+    font-size: 14px;
+    margin: 10px;
+    padding: 10px 20px;
+    background-color: #000;
+    color: #0f0;
+    border: 2px solid #0f0;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+body.light-mode #settingsMenu button {
+    background-color: #fff;
+    color: #0a0;
+    border-color: #0a0;
+}
+
+body.colorblind-mode #settingsMenu button {
+    background-color: #000;
+    color: #ff0;
+    border-color: #ff0;
+}
+
+#settingsMenu button:hover {
+    background-color: #0f0;
+    color: #000;
+}
+
+body.light-mode #settingsMenu button:hover {
+    background-color: #0a0;
+    color: #fff;
+}
+
+body.colorblind-mode #settingsMenu button:hover {
+    background-color: #ff0;
+    color: #000;
+}

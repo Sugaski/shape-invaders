@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shape Invaders</title>
+    <link rel="stylesheet" href="stylesheets.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="menuScreen">
+        <h1>Shape Invaders</h1>
+        <div id="menuOptions">
+            <button id="newGame">New Game</button>
+            <button id="continue" disabled>Continue</button>
+            <button id="highScores">High Scores</button>
+            <button id="settings">Settings</button>
+            <button id="exit">Exit</button>
+        </div>
+    </div>
+    <div id="settingsMenu" style="display: none;">
+        <h2>Settings</h2>
+        <div>
+            <label>Color Mode:</label>
+            <div class="radio-group">
+                <label for="darkMode">Dark Mode</label>
+                <input type="radio" id="darkMode" name="colorMode" value="dark" checked>
+            </div>
+            <div class="radio-group">
+                <label for="lightMode">Light Mode</label>
+                <input type="radio" id="lightMode" name="colorMode" value="light">
+            </div>
+            <div class="radio-group">
+                <label for="colorblindMode">Colorblind Mode</label>
+                <input type="radio" id="colorblindMode" name="colorMode" value="colorblind">
+            </div>
+        </div>
+        <button id="confirmSettings">Confirm</button>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <script src="script.js"></script>
+</body>
+</html>
