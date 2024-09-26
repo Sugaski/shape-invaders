@@ -59,9 +59,9 @@ const ColorScheme = {
         colors: ['#4FAF44', '#F6EB14', '#FF9526', '#EF4423', '#2A3492']
     },
     light: {
-        text: '#000',
+        text: '#0d2140',
         background: '#FAF9F6',
-        colors: ['#4FAF44', '#FF5733', '#FF9526', '#FFC300', '#2A3492']
+        colors: ['#a0eba8', '#f53141', '#f2621f', '#FFC300', '#ae88e3']
     },
     colorblind: {
         text: '#009e73',
