@@ -904,11 +904,11 @@ function drawBossCounters() {
     const bottomPadding = 10;
     const rightPadding = 10;
     
-    ctx.fillText(`Stage 1 Bosses Destroyed: ${miniBossesDestroyed}`, 
+    ctx.fillText(`Stage 1 Bosses: ${miniBossesDestroyed}`, 
         canvas.width - rightPadding, 
         canvas.height - bottomPadding - 20);
     
-    ctx.fillText(`Stage 2 Bosses Destroyed: ${bigBossesDestroyed}`, 
+    ctx.fillText(`Stage 2 Bosses: ${bigBossesDestroyed}`, 
         canvas.width - rightPadding, 
         canvas.height - bottomPadding);
 }
@@ -1522,7 +1522,7 @@ function spawnBigBoss() {
         bigBoss = {
             x: canvas.width / 2,
             y: canvas.height / 2,
-            size: 100,
+            size: 120,
             health: 5,
             maxHealth: 5,
             angle: 0,
@@ -1615,12 +1615,20 @@ function drawBigBoss() {
         ctx.shadowColor = 'gold';
         ctx.shadowBlur = 30;
 
-        // Draw the triangle
+        // Draw the star
         ctx.fillStyle = bigBoss.defeated ? `rgba(255, 215, 0, ${bigBoss.shakeTime / 300})` : 'gold';
         ctx.beginPath();
-        ctx.moveTo(0, -bigBoss.size / 2);
-        ctx.lineTo(-bigBoss.size / 2, bigBoss.size / 2);
-        ctx.lineTo(bigBoss.size / 2, bigBoss.size / 2);
+        for (let i = 0; i < 5; i++) {
+            const angle = (i * 4 * Math.PI / 5) - Math.PI / 2;
+            const outerX = Math.cos(angle) * bigBoss.size / 2;
+            const outerY = Math.sin(angle) * bigBoss.size / 2;
+            ctx.lineTo(outerX, outerY);
+
+            const innerAngle = angle + Math.PI / 5;
+            const innerX = Math.cos(innerAngle) * bigBoss.size / 4;
+            const innerY = Math.sin(innerAngle) * bigBoss.size / 4;
+            ctx.lineTo(innerX, innerY);
+        }
         ctx.closePath();
         ctx.fill();
 
