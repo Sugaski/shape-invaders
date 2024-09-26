@@ -33,13 +33,13 @@ let lastExtraLife = 0;
 let playerInvulnerable = false;
 let playerBlinkInterval;
 
-let miniBosses = [];
+let stageOneBosses = [];
 let powerups = [];
 let currentPowerup = null;
 let powerupEndTime = 0;
 
 const BIG_BOSS_SPAWN_INTERVAL = 5; 
-const MINI_BOSS_SPAWN_INTERVAL = 10; // Spawn mini-boss every 500 points
+const STAGE_ONE_BOSS_SPAWN_INTERVAL = 10; // Spawn stage-one boss every 500 points
 const ENEMY_SPAWN_CHANCE = 0.02;
 const POWERUP_DURATION = 15000; // 15 seconds
 const POWERUP_FLASH_DURATION = 5000;
@@ -413,20 +413,21 @@ function resetGame() {
     score = 0;
     lives = 3;
     lastExtraLife = 0;
-    miniBosses = [];
+    stageOneBosses = [];
     powerups = [];
     currentPowerup = null;
     powerupEndTime = 0;
     bigBoss = null;
-    miniBossesDefeated = 0;
+    stageOneBossesDefeated = 0;
     projectilesDestroyed = 0;
-    miniBossesDestroyed = 0;
+    stageOneBossesDestroyed = 0;
     bigBossesDestroyed = 0;
     lastFireTime = 0;
 }
 
 function gameOver() {
-    //console.log("Game Over function called");
+    if (!isGameRunning) return; // Prevent multiple calls
+    console.log("Game Over function called");
     isGameRunning = false;
     isPaused = true;
     if (animationFrameId) {
@@ -438,7 +439,7 @@ function gameOver() {
     
     bigBoss = null;
     bigBossProjectiles = [];
-    miniBossesDefeated = 0;
+    stageOneBossesDefeated = 0;
     
     showGameOverScreen();
 }
@@ -492,8 +493,8 @@ function updateContinueButton() {
     continueButton.disabled = !(isGameRunning && isPaused);
 }
 
-function spawnMiniBoss() {
-    if (!bigBoss && score > 0 && score % MINI_BOSS_SPAWN_INTERVAL === 0 && miniBosses.length === 0) {
+function spawnStageOneBoss() {
+    if (!bigBoss && score > 0 && score % STAGE_ONE_BOSS_SPAWN_INTERVAL === 0 && stageOneBosses.length === 0) {
         let x, y;
         
         // Determine which side of the screen to spawn on
@@ -524,7 +525,7 @@ function spawnMiniBoss() {
         const angle = Math.atan2(centerY - y, centerX - x);
         const speed = 2 + Math.random() * 2; // Random speed between 2 and 4
 
-        miniBosses.push({
+        stageOneBosses.push({
             x: x,
             y: y,
             size: 60,
@@ -533,12 +534,12 @@ function spawnMiniBoss() {
             dy: Math.sin(angle) * speed,
             color: ColorScheme.getRandomColor()
         });
-        //console.log("Mini-boss spawned. Total mini-bosses:", miniBosses.length);
+        //console.log("Stage-one boss spawned. Total mini-bosses:", stageOneBosses.length);
     }
 }
 
-function drawMiniBosses() {
-    miniBosses.forEach(boss => {
+function drawStageOneBosses() {
+    stageOneBosses.forEach(boss => {
         ctx.shadowBlur = 20;
         ctx.shadowColor = boss.color;
         
@@ -565,8 +566,8 @@ function drawMiniBosses() {
     });
 }
 
-function moveMiniBosses() {
-    miniBosses.forEach(boss => {
+function moveStageOneBosses() {
+    stageOneBosses.forEach(boss => {
         boss.x += boss.dx;
         boss.y += boss.dy;
         
@@ -594,9 +595,9 @@ function moveMiniBosses() {
     });
 }
 
-function checkMiniBossCollisions() {
-    for (let i = miniBosses.length - 1; i >= 0; i--) {
-        const boss = miniBosses[i];
+function checkStageOneBossCollisions() {
+    for (let i = stageOneBosses.length - 1; i >= 0; i--) {
+        const boss = stageOneBosses[i];
         for (let j = bullets.length - 1; j >= 0; j--) {
             const bullet = bullets[j];
             const dx = boss.x - bullet.x;
@@ -609,10 +610,10 @@ function checkMiniBossCollisions() {
                 //console.log("Mini-boss hit. Remaining health:", boss.health);
                 if (boss.health <= 0) {
                     createExplosion(boss.x, boss.y);
-                    destroyMiniBoss(i);
+                    destroyStageOneBoss(i);
                     score += 50;
                     spawnPowerup(boss.x, boss.y);
-                    //console.log("Mini-boss destroyed. Total destroyed:", miniBossesDestroyed);
+                    //console.log("Stage-one boss destroyed. Total destroyed:", stageOneBossesDestroyed);
                 }
                 break;
             }
@@ -620,13 +621,13 @@ function checkMiniBossCollisions() {
     }
 }
 
-function destroyMiniBoss(index) {
-    miniBosses.splice(index, 1);
-    miniBossesDestroyed++;
-    miniBossesDefeated++; // Add this line
+function destroyStageOneBoss(index) {
+    stageOneBosses.splice(index, 1);
+    stageOneBossesDestroyed++;
+    stageOneBossesDefeated++; // Add this line
     score += 50;
-    //console.log("Mini-boss destroyed. Total destroyed:", miniBossesDestroyed);
-    //console.log("Mini-bosses defeated:", miniBossesDefeated); // Add this line
+    //console.log("Stage-one boss destroyed. Total destroyed:", stageOneBossesDestroyed);
+    //console.log("Stage-one bosses defeated:", stageOneBossesDefeated);
 }
 
 function spawnPowerup(x, y) {
@@ -782,7 +783,7 @@ function findClosestEnemy(bullet) {
     let closestEnemy = null;
     let closestDistance = Infinity;
     
-    const allEnemies = enemies.concat(miniBosses);
+    const allEnemies = enemies.concat(stageOneBosses);
     if (bigBoss) {
         allEnemies.push(bigBoss);
     }
@@ -930,7 +931,7 @@ function drawBossCounters() {
     const bottomPadding = 10;
     const rightPadding = 10;
     
-    ctx.fillText(`Stage 1 Bosses: ${miniBossesDestroyed}`, 
+    ctx.fillText(`Stage 1 Bosses: ${stageOneBossesDestroyed}`, 
         canvas.width - rightPadding, 
         canvas.height - bottomPadding - 20);
     
@@ -1100,14 +1101,14 @@ function checkCollisions() {
             }
         }
 
-        // Check collisions with mini-bosses
-        for (let i = miniBosses.length - 1; i >= 0; i--) {
-            const miniBoss = miniBosses[i];
+        // Check collisions with stage-one bosses
+        for (let i = stageOneBosses.length - 1; i >= 0; i--) {
+            const stageOneBoss = stageOneBosses[i];
             if (!playerInvulnerable) {
-                const playerDx = miniBoss.x - player.x;
-                const playerDy = miniBoss.y - player.y;
+                const playerDx = stageOneBoss.x - player.x;
+                const playerDy = stageOneBoss.y - player.y;
                 const playerDistance = Math.sqrt(playerDx * playerDx + playerDy * playerDy);
-                if (playerDistance < miniBoss.size / 2 + player.size / 2) {
+                if (playerDistance < stageOneBoss.size / 2 + player.size / 2) {
                     loseLife();
                 }
             }
@@ -1341,18 +1342,18 @@ function gameLoop(currentTime) {
             if (typeof movePlayer === 'function') movePlayer();
             if (typeof moveBullets === 'function') moveBullets();
             if (typeof moveEnemies === 'function') moveEnemies();
-            if (typeof moveMiniBosses === 'function') moveMiniBosses();
+            if (typeof moveStageOneBosses === 'function') moveStageOneBosses();
             if (typeof moveParticles === 'function') moveParticles();
             if (typeof moveBigBoss === 'function') moveBigBoss();
             if (typeof moveBigBossProjectiles === 'function') moveBigBossProjectiles();
                 
             //console.log("Spawning entities");
             if (typeof spawnEnemy === 'function') spawnEnemy();
-            if (typeof spawnMiniBoss === 'function') spawnMiniBoss();
+            if (typeof spawnStageOneBoss === 'function') spawnStageOneBoss();
                 
             //console.log("Checking collisions");
             if (typeof checkCollisions === 'function') checkCollisions();
-            if (typeof checkMiniBossCollisions === 'function') checkMiniBossCollisions();
+            if (typeof checkStageOneBossCollisions === 'function') checkStageOneBossCollisions();
             if (typeof checkBigBossProjectileCollisions === 'function') checkBigBossProjectileCollisions();
             if (typeof checkBigBossCollisions === 'function') checkBigBossCollisions();
             if (typeof checkPowerupCollisions === 'function') checkPowerupCollisions();
@@ -1371,7 +1372,7 @@ function gameLoop(currentTime) {
             if (typeof drawPlayer === 'function') drawPlayer();
             if (typeof drawBullets === 'function') drawBullets();
             if (typeof drawEnemies === 'function') drawEnemies();
-            if (typeof drawMiniBosses === 'function') drawMiniBosses();
+            if (typeof drawStageOneBosses === 'function') drawStageOneBosses();
             if (typeof drawBigBoss === 'function') drawBigBoss();
             if (typeof drawBigBossProjectiles === 'function') drawBigBossProjectiles();
             if (typeof drawPowerups === 'function') drawPowerups();
@@ -1381,7 +1382,7 @@ function gameLoop(currentTime) {
             if (typeof drawTopPlayers === 'function') drawTopPlayers();
             drawBossCounters();
 
-            //console.log("Current miniBossesDefeated:", miniBossesDefeated);
+            //console.log("Current stageOneBossesDefeated:", stageOneBossesDefeated);
             //console.log("Big boss exists:", !!bigBoss);
             //console.log("Current score:", score);
 
@@ -1439,9 +1440,9 @@ function gameLoop(currentTime) {
 
 function checkBigBossSpawn() {
     //console.log("Checking big boss spawn conditions:");
-    //console.log("miniBossesDefeated:", miniBossesDefeated);
+    //console.log("stageOneBossesDefeated:", stageOneBossesDefeated);
     //console.log("bigBoss exists:", !!bigBoss);
-    if (!bigBoss && miniBossesDefeated >= 4) {
+    if (!bigBoss && stageOneBossesDefeated >= 4) {
         //console.log("Conditions met for big boss spawn");
         spawnBigBoss();
     } else {
@@ -1542,8 +1543,8 @@ function resumePowerups() {
 }
 
 function spawnBigBoss() {
-    //console.log("spawnBigBoss function called. miniBossesDefeated:", miniBossesDefeated);
-    if (!bigBoss && miniBossesDefeated >= 5) {
+    //console.log("spawnBigBoss function called. stageOneBossesDefeated:", stageOneBossesDefeated);
+    if (!bigBoss && stageOneBossesDefeated >= 5) {
         bigBoss = {
             x: canvas.width / 2,
             y: canvas.height / 2,
@@ -1563,15 +1564,15 @@ function spawnBigBoss() {
         };
         //console.log("Big boss spawned:", bigBoss);
         
-        // Clear all enemies and mini-bosses
-        enemies = [];
-        miniBosses = [];
+        // Clear all enemies and stage-one bosses
+    enemies = [];
+    stageOneBosses = [];
         
         // Pause active powerups and clear field powerups
         pausePowerups();
         clearFieldPowerups();
     } else {
-        //console.log("Not spawning big boss. Current conditions: bigBoss exists:", !!bigBoss, "miniBossesDefeated:", miniBossesDefeated);
+        //console.log("Not spawning big boss. Current conditions: bigBoss exists:", !!bigBoss, "stageOneBossesDefeated:", stageOneBossesDefeated);
     }
 }
 
@@ -1825,24 +1826,24 @@ function resetGame() {
     score = 0;
     lives = 3;
     lastExtraLife = 0;
-    miniBosses = [];
+    stageOneBosses = [];
     powerups = [];
     currentPowerup = null;
     powerupEndTime = 0;
     bigBoss = null;
-    miniBossesDefeated = 0;
+    stageOneBossesDefeated = 0;
     projectilesDestroyed = 0;
-    miniBossesDestroyed = 0;
+    stageOneBossesDestroyed = 0;
     bigBossesDestroyed = 0;
     lastFireTime = 0;
 }
 
 function resetAfterBigBoss() {
     //console.log("Resetting game state after big boss defeat");
-    miniBossesDefeated = 0;
+    stageOneBossesDefeated = 0;
     resumePowerups();
     spawnEnemies(15);
-    spawnMiniBoss(); 
+    spawnStageOneBoss(); 
 }
 
 function spawnEnemies(count) {
