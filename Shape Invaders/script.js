@@ -39,7 +39,7 @@ let currentPowerup = null;
 let powerupEndTime = 0;
 
 const BIG_BOSS_SPAWN_INTERVAL = 5; 
-const MINI_BOSS_SPAWN_INTERVAL = 500; // Spawn mini-boss every 500 points
+const MINI_BOSS_SPAWN_INTERVAL = 10; // Spawn mini-boss every 500 points
 const ENEMY_SPAWN_CHANCE = 0.02;
 const POWERUP_DURATION = 15000; // 15 seconds
 const POWERUP_FLASH_DURATION = 5000;
@@ -1494,13 +1494,13 @@ function pausePowerups() {
     powerupsPausedTime = Date.now();
 }
 
-// Define the clearFieldPowerups function
+
 function clearFieldPowerups() {
     //console.log("Clearing field powerups");
     powerups = [];
 }
 
-// Define the resumePowerups function
+
 function resumePowerups() {
     //console.log("Resuming powerups");
     const pauseDuration = Date.now() - powerupsPausedTime;
@@ -1515,19 +1515,18 @@ function resumePowerups() {
     });
 }
 
-// Modify the spawnBigBoss function
 function spawnBigBoss() {
     //console.log("spawnBigBoss function called. miniBossesDefeated:", miniBossesDefeated);
-    if (!bigBoss && miniBossesDefeated >= 4) {
+    if (!bigBoss && miniBossesDefeated >= 5) {
         bigBoss = {
             x: canvas.width / 2,
             y: canvas.height / 2,
-            size: 120,
+            size: 200,
             health: 5,
             maxHealth: 5,
             angle: 0,
             rotationSpeed: 0.01,
-            orbitRadius: 200,
+            orbitRadius: 360,
             orbitAngle: 0,
             orbitSpeed: 0.005,
             color: '#FFD700',
@@ -1550,7 +1549,7 @@ function spawnBigBoss() {
     }
 }
 
-// Modify the moveBigBoss function
+
 function moveBigBoss() {
     if (bigBoss && !bigBoss.defeated) {
         bigBoss.orbitAngle += bigBoss.orbitSpeed;
