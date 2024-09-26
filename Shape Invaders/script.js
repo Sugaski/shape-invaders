@@ -329,12 +329,8 @@ function applyColorMode(mode) {
     ColorScheme.current = mode;
     console.log('Current mode set to:', ColorScheme.current);
     
-    // Regenerate colors for existing enemies
-    enemies.forEach(enemy => {
-        enemy.color = ColorScheme.getRandomColor();
-    });
-
-    // Reapply color scheme to any open modals
+    updateColors();
+    
     const modals = document.querySelectorAll('.modal-content');
     modals.forEach(modal => {
         applyColorModeToElement(modal);
@@ -342,6 +338,43 @@ function applyColorMode(mode) {
         const button = modal.querySelector('button');
         if (input) applyColorModeToElement(input);
         if (button) applyColorModeToElement(button);
+    });
+}
+
+function updateColors() {
+    // Update background color
+    canvas.style.backgroundColor = ColorScheme.getBackgroundColor();
+    
+    // Update text color
+    ctx.fillStyle = ColorScheme.getTextColor();
+    
+    // Only update colors for elements without a color assigned
+    enemies.forEach(enemy => {
+        if (!enemy.color) {
+            enemy.color = ColorScheme.getRandomColor();
+        }
+    });
+    
+    stageOneBosses.forEach(boss => {
+        if (!boss.color) {
+            boss.color = ColorScheme.getRandomColor();
+        }
+    });
+    
+    if (typeof bigBoss !== 'undefined' && bigBoss !== null && !bigBoss.color) {
+        bigBoss.color = ColorScheme.getRandomColor();
+    }
+    
+    powerups.forEach(powerup => {
+        if (!powerup.color) {
+            powerup.color = getPowerupColor(powerup.type);
+        }
+    });
+    
+    particles.forEach(particle => {
+        if (!particle.color && !particle.fixedColor) {
+            particle.color = ColorScheme.getRandomColor();
+        }
     });
 }
 
@@ -651,7 +684,8 @@ function spawnPowerup(x, y) {
         x,
         y,
         type: powerupType,
-        spawnTime: Date.now()
+        spawnTime: Date.now(),
+        color: getPowerupColor(powerupType)
     });
 }
 
@@ -669,7 +703,7 @@ function drawPowerups() {
 
             // Draw outer glow
             const gradient = ctx.createRadialGradient(powerup.x, powerup.y, 5 * pulseScale, powerup.x, powerup.y, 30 * pulseScale);
-            gradient.addColorStop(0, getPowerupColor(powerup.type));
+            gradient.addColorStop(0, powerup.color);
             gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
             
             ctx.beginPath();
@@ -680,7 +714,7 @@ function drawPowerups() {
             // Draw inner powerup
             ctx.beginPath();
             ctx.arc(powerup.x, powerup.y, 10 * pulseScale, 0, Math.PI * 2);
-            ctx.fillStyle = getPowerupColor(powerup.type);
+            ctx.fillStyle = powerup.color;
             ctx.fill();
 
             // Add a white border
@@ -703,11 +737,7 @@ function updatePowerups() {
 }
 
 function getPowerupColor(type) {
-    switch (type) {
-        case 1: return '#ff00ff'; // Bright magenta
-        case 2: return '#00ffff'; // Bright cyan
-        case 3: return '#ffff00'; // Bright yellow
-    }
+    return ColorScheme.getRandomColor();
 }
 
 function checkPowerupCollisions() {
@@ -1015,7 +1045,6 @@ function spawnEnemy() {
         const y = Math.random() * canvas.height;
         const angle = Math.random() * Math.PI * 2;
         const speed = 1 + Math.random() * 2;
-        const colors = ['#0f0', '#ff0', '#f0f', '#0ff'];
         enemies.push({
             x: x,
             y: y,
@@ -1023,7 +1052,7 @@ function spawnEnemy() {
             sides: Math.floor(Math.random() * 3) + 3,
             dx: Math.cos(angle) * speed,
             dy: Math.sin(angle) * speed,
-            color: colors[Math.floor(Math.random() * colors.length)]
+            color: ColorScheme.getRandomColor()
         });
     }
 }
@@ -1048,7 +1077,8 @@ function createExplosion(x, y, color = '#fff', size = 2) {
             dy: Math.sin(angle) * speed,
             size: size + Math.random() * 3,
             life: 1,
-            color: explosionColor
+            color: explosionColor,
+            fixedColor: true
         });
     }
 }
@@ -1345,8 +1375,9 @@ function gameLoop(currentTime) {
         return;
     }
 
-    //console.log("Game loop iteration started");
     if (!isPaused) {
+        updateColors(); // Add this line at the beginning of the game loop
+        
         //console.log("Game is not paused, executing game logic");
         try {
             //console.log("Clearing canvas");
@@ -1573,7 +1604,7 @@ function spawnBigBoss() {
             orbitRadius: 360,
             orbitAngle: 0,
             orbitSpeed: 0.005,
-            color: '#FFD700',
+            color: ColorScheme.getRandomColor(),
             shakeTime: 0,
             launchCooldown: 300,
             defeated: false,
