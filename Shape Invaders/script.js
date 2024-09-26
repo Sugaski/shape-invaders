@@ -1,8 +1,5 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const MAX_ENEMIES = 15;
-
-//console.log("MAX_ENEMIES defined as:", MAX_ENEMIES);
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -15,6 +12,14 @@ window.addEventListener('resize', resizeCanvas);
 
 let lastMousePosition = { x: 0, y: 0 };
 
+const menuScreen = document.getElementById('menuScreen');
+const gameCanvas = document.getElementById('gameCanvas');
+const BIG_BOSS_SPAWN_INTERVAL = 5; 
+const STAGE_ONE_BOSS_SPAWN_INTERVAL = 500; // Spawn stage-one boss every 500 points
+const ENEMY_SPAWN_CHANCE = 0.02;
+const POWERUP_DURATION = 20000; // 20 seconds
+const POWERUP_FLASH_DURATION = 5000;
+const MAX_ENEMIES = 15;
 const player = {
     x: canvas.width / 2,
     y: canvas.height / 2,
@@ -34,32 +39,17 @@ let lives = 3;
 let lastExtraLife = 0;
 let playerInvulnerable = false;
 let playerBlinkInterval;
-
 let stageOneBosses = [];
 let powerups = [];
 let currentPowerup = null;
 let powerupEndTime = 0;
-
-const BIG_BOSS_SPAWN_INTERVAL = 5; 
-const STAGE_ONE_BOSS_SPAWN_INTERVAL = 500; // Spawn stage-one boss every 500 points
-const ENEMY_SPAWN_CHANCE = 0.02;
-const POWERUP_DURATION = 20000; // 20 seconds
-const POWERUP_FLASH_DURATION = 5000;
-
-
 let projectilesDestroyed = 0;
-
 let isGameRunning = false;
 let animationFrameId = null;
-
 let playerName = '';
 let topPlayers = [];
 let highScoreName = localStorage.getItem('highScoreName') || '';
-
 let gameState = 'menu';
-const menuScreen = document.getElementById('menuScreen');
-const gameCanvas = document.getElementById('gameCanvas');
-
 let isPaused = false;
 
 const ColorScheme = {
