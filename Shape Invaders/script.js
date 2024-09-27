@@ -15,8 +15,9 @@ let lastMousePosition = { x: 0, y: 0 };
 const menuScreen = document.getElementById('menuScreen');
 const gameCanvas = document.getElementById('gameCanvas');
 const BIG_BOSS_SPAWN_INTERVAL = 5; 
-const STAGE_ONE_BOSS_SPAWN_INTERVAL = 500; // Spawn stage-one boss every 500 points
-const ENEMY_SPAWN_CHANCE = 0.02;
+const STAGE_ONE_BOSS_SPAWN_INTERVAL = 10; // Spawn stage-one boss every 500 points
+const INITIAL_ENEMY_SPAWN_CHANCE = 0.02;
+let currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
 const POWERUP_DURATION = 20000; // 20 seconds
 const POWERUP_FLASH_DURATION = 5000;
 const MAX_ENEMIES = 15;
@@ -335,6 +336,7 @@ function applyColorMode(mode) {
     console.log('Current mode set to:', ColorScheme.current);
     
     updateColors();
+    updateRadioButtonStyles();
     
     const modals = document.querySelectorAll('.modal-content');
     modals.forEach(modal => {
@@ -383,6 +385,24 @@ function updateColors() {
     });
 }
 
+function updateRadioButtonStyles() {
+    const radioButtons = document.querySelectorAll('#settingsMenu input[type="radio"]');
+    const textColor = ColorScheme.getTextColor();
+    
+    radioButtons.forEach(radio => {
+        radio.style.accentColor = textColor;
+        
+        // Create a style for the custom radio button
+        const style = document.createElement('style');
+        style.textContent = `
+            #${radio.id}:checked::before {
+                background-color: ${textColor};
+            }
+        `;
+        document.head.appendChild(style);
+    });
+}
+
 function loadSettings() {
     const savedMode = localStorage.getItem('colorMode') || 'dark';
     ColorScheme.current = savedMode;
@@ -420,6 +440,7 @@ window.addEventListener('load', () => {
     loadSettings();
     showMenu();
     initializeTopPlayers();
+    updateRadioButtonStyles();
 });
 
 function startNewGame() {
@@ -476,6 +497,7 @@ function resetGame() {
     stageOneBossesDestroyed = 0;
     bigBossesDestroyed = 0;
     lastFireTime = 0;
+    currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
 }
 
 function gameOver() {
@@ -677,10 +699,16 @@ function checkStageOneBossCollisions() {
 function destroyStageOneBoss(index) {
     stageOneBosses.splice(index, 1);
     stageOneBossesDestroyed++;
-    stageOneBossesDefeated++; // Add this line
+    stageOneBossesDefeated++;
     score += 50;
+    
+    // Increase spawn rate
+    currentEnemySpawnChance *= 1.2; // Increase by 20% each time
+    currentEnemySpawnChance = Math.min(currentEnemySpawnChance, 0.1); // Cap at 10% chance per frame
+    
     //console.log("Stage-one boss destroyed. Total destroyed:", stageOneBossesDestroyed);
     //console.log("Stage-one bosses defeated:", stageOneBossesDefeated);
+    //console.log("New enemy spawn chance:", currentEnemySpawnChance);
 }
 
 function spawnPowerup(x, y) {
@@ -774,15 +802,16 @@ function updatePowerup() {
 }
 
 function fireBullet() {
+    const angle = player.angle;
     const speed = 10;
     
     // Calculate the position of the triangle's tip
-    const tipX = player.x + Math.cos(player.angle) * (player.size / 2);
-    const tipY = player.y + Math.sin(player.angle) * (player.size / 2);
+    const tipX = player.x + Math.cos(angle) * (player.size / 2);
+    const tipY = player.y + Math.sin(angle) * (player.size / 2);
     
     if (currentPowerup === 1) {
         for (let i = -1; i <= 1; i++) {
-            const spreadAngle = player.angle + i * 0.2;
+            const spreadAngle = angle + i * 0.2;
             bullets.push({
                 x: tipX,
                 y: tipY,
@@ -794,8 +823,8 @@ function fireBullet() {
         bullets.push({
             x: tipX,
             y: tipY,
-            dx: Math.cos(player.angle) * speed,
-            dy: Math.sin(player.angle) * speed,
+            dx: Math.cos(angle) * speed,
+            dy: Math.sin(angle) * speed,
             isLaser: true,
             length: Math.max(canvas.width, canvas.height) * 2,
             creationTime: Date.now(),
@@ -805,16 +834,16 @@ function fireBullet() {
         bullets.push({
             x: tipX,
             y: tipY,
-            dx: Math.cos(player.angle) * speed,
-            dy: Math.sin(player.angle) * speed,
+            dx: Math.cos(angle) * speed,
+            dy: Math.sin(angle) * speed,
             isHoning: true
         });
     } else {
         bullets.push({
             x: tipX,
             y: tipY,
-            dx: Math.cos(player.angle) * speed,
-            dy: Math.sin(player.angle) * speed
+            dx: Math.cos(angle) * speed,
+            dy: Math.sin(angle) * speed
         });
     }
 }
@@ -1048,7 +1077,7 @@ function spawnEnemy() {
         return; // Don't spawn if we've reached the maximum
     }
 
-    if (!bigBoss && Math.random() < ENEMY_SPAWN_CHANCE) {
+    if (!bigBoss && Math.random() < currentEnemySpawnChance) {
         const x = Math.random() * canvas.width;
         const y = Math.random() * canvas.height;
         const angle = Math.random() * Math.PI * 2;
@@ -1189,7 +1218,7 @@ function checkCollisions() {
                         proj.health--;
 
                         if (proj.health <= 0) {
-                            createNeonPurpleExplosion(proj.x, proj.y);
+                            createGoldenExplosion(proj.x, proj.y);
                             bigBoss.projectiles.splice(j, 1);
                             
                             // Damage the big boss
@@ -1216,7 +1245,7 @@ function checkCollisions() {
             const distance = Math.sqrt(dx * dx + dy * dy);
 
             if (distance < player.size / 2 + proj.size / 2) {
-                createNeonPurpleExplosion(proj.x, proj.y);
+                createGoldenExplosion(proj.x, proj.y);
                 bigBoss.projectiles.splice(i, 1);
                 loseLife();
                 if (lives <= 0) {
@@ -1875,11 +1904,13 @@ function resetGame() {
     stageOneBossesDestroyed = 0;
     bigBossesDestroyed = 0;
     lastFireTime = 0;
+    currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
 }
 
 function resetAfterBigBoss() {
     //console.log("Resetting game state after big boss defeat");
     stageOneBossesDefeated = 0;
+    currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
     resumePowerups();
     spawnEnemies(15);
     spawnStageOneBoss(); 
