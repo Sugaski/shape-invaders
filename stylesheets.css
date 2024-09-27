@@ -75,15 +75,37 @@ body.colorblind-mode #menuScreen {
 h1 {
     font-size: 76px;
     margin-bottom: 40px;
-    text-shadow: 0 0 10px #0f0, 0 0 20px #0f0, 0 0 30px #0f0;
+    text-shadow: 
+        -1px -1px 0 #000,  
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000,
+        0 0 10px #0f0, 
+        0 0 20px #0f0, 
+        0 0 30px #0f0;
 }
 
 body.light-mode h1 {
-    text-shadow: 0 0 10px #0d2140, 0 0 20px #0d2140, 0 0 30px #0d2140;
+    text-shadow: 
+        -1px -1px 0 #FAF9F6,  
+         1px -1px 0 #FAF9F6,
+        -1px  1px 0 #FAF9F6,
+         1px  1px 0 #FAF9F6,
+        0 0 10px #0d2140, 
+        0 0 20px #0d2140, 
+        0 0 30px #0d2140;
 }
 
 body.colorblind-mode h1 {
     text-shadow: 0 0 10px #009e73, 0 0 20px #009e73, 0 0 30px #009e73;
+    text-shadow: 
+        -1px -1px 0 #000,  
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000,
+        0 0 10px #009e73, 
+        0 0 20px #009e73, 
+        0 0 30px #009e73;
 }
 
 button, input {
