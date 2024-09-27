@@ -10,6 +10,118 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
+function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function enterFullscreen() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+    }
+}
+
+function createMobileControls() {
+    const dpad = document.createElement('div');
+    dpad.id = 'dpad';
+    document.body.appendChild(dpad);
+
+    const stick = document.createElement('div');
+    stick.id = 'stick';
+    document.body.appendChild(stick);
+
+    const directions = ['up', 'down', 'left', 'right'];
+    directions.forEach(dir => {
+        const button = document.createElement('button');
+        button.id = `dpad-${dir}`;
+        button.innerText = dir.toUpperCase();
+        dpad.appendChild(button);
+    });
+
+    const stickKnob = document.createElement('div');
+    stickKnob.id = 'stick-knob';
+    stick.appendChild(stickKnob);
+}
+
+function setupMobileControls() {
+    const dpadButtons = document.querySelectorAll('#dpad button');
+    const stick = document.getElementById('stick');
+    const stickKnob = document.getElementById('stick-knob');
+
+    dpadButtons.forEach(button => {
+        button.addEventListener('touchstart', handleDpadTouch);
+        button.addEventListener('touchend', handleDpadRelease);
+    });
+
+    stick.addEventListener('touchstart', handleStickTouch);
+    stick.addEventListener('touchmove', handleStickMove);
+    stick.addEventListener('touchend', handleStickRelease);
+}
+
+function handleDpadTouch(e) {
+    e.preventDefault();
+    const direction = e.target.id.split('-')[1];
+    switch (direction) {
+        case 'up': player.dy = -player.speed; break;
+        case 'down': player.dy = player.speed; break;
+        case 'left': player.dx = -player.speed; break;
+        case 'right': player.dx = player.speed; break;
+    }
+}
+
+function handleDpadRelease(e) {
+    e.preventDefault();
+    const direction = e.target.id.split('-')[1];
+    switch (direction) {
+        case 'up':
+        case 'down': player.dy = 0; break;
+        case 'left':
+        case 'right': player.dx = 0; break;
+    }
+}
+
+function handleStickTouch(e) {
+    e.preventDefault();
+    updateStickPosition(e.touches[0]);
+}
+
+function handleStickMove(e) {
+    e.preventDefault();
+    updateStickPosition(e.touches[0]);
+}
+
+function handleStickRelease() {
+    const stickKnob = document.getElementById('stick-knob');
+    stickKnob.style.transform = 'translate(0, 0)';
+    player.angle = 0;
+}
+
+function updateStickPosition(touch) {
+    const stick = document.getElementById('stick');
+    const stickKnob = document.getElementById('stick-knob');
+    const rect = stick.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    let deltaX = touch.clientX - rect.left - centerX;
+    let deltaY = touch.clientY - rect.top - centerY;
+    
+    const distance = Math.min(Math.sqrt(deltaX * deltaX + deltaY * deltaY), centerX);
+    const angle = Math.atan2(deltaY, deltaX);
+    
+    const knobX = Math.cos(angle) * distance;
+    const knobY = Math.sin(angle) * distance;
+    
+    stickKnob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+    player.angle = angle;
+}
+
 let lastMousePosition = { x: 0, y: 0 };
 
 const menuScreen = document.getElementById('menuScreen');
@@ -348,6 +460,23 @@ function applyColorMode(mode) {
     });
 }
 
+function updateMobileControlsColor() {
+    if (isMobile()) {
+        const textColor = ColorScheme.getTextColor();
+        const dpadButtons = document.querySelectorAll('#dpad button');
+        const stick = document.getElementById('stick');
+        const stickKnob = document.getElementById('stick-knob');
+
+        dpadButtons.forEach(button => {
+            button.style.borderColor = textColor;
+            button.style.color = textColor;
+        });
+
+        stick.style.borderColor = textColor;
+        stickKnob.style.backgroundColor = textColor;
+    }
+}
+
 function updateColors() {
     // Update background color
     canvas.style.backgroundColor = ColorScheme.getBackgroundColor();
@@ -470,6 +599,11 @@ function startGame() {
     isPaused = false;
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
+    }
+    if (isMobile()) {
+        enterFullscreen();
+        createMobileControls();
+        setupMobileControls();
     }
     animationFrameId = requestAnimationFrame(gameLoop);
 }

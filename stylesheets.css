@@ -313,3 +313,55 @@ body.colorblind-mode #settingsMenu button:hover {
     background-color: #009e73;
     color: #000;
 }
+
+#dpad {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 150px;
+    height: 150px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 5px;
+}
+
+#dpad button {
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 2px solid;
+    border-radius: 5px;
+    font-size: 12px;
+    padding: 5px;
+}
+
+#dpad-up { grid-area: 1 / 2 / 2 / 3; }
+#dpad-left { grid-area: 2 / 1 / 3 / 2; }
+#dpad-right { grid-area: 2 / 3 / 3 / 4; }
+#dpad-down { grid-area: 3 / 2 / 4 / 3; }
+
+#stick {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 100px;
+    height: 100px;
+    border: 2px solid;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+#stick-knob {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+@media (min-width: 768px) {
+    #dpad, #stick {
+        display: none;
+    }
+}
