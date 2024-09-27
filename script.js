@@ -2,8 +2,12 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    if (isMobile()) {
+        resizeCanvasForMobile();
+    } else {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
     console.log("Canvas resized to:", canvas.width, "x", canvas.height);
 }
 
@@ -14,27 +18,26 @@ function isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-function enterFullscreen() {
-    const elem = document.documentElement;
-    if (elem.requestFullscreen) {
-        elem.requestFullscreen();
-    } else if (elem.mozRequestFullScreen) {
-        elem.mozRequestFullScreen();
-    } else if (elem.webkitRequestFullscreen) {
-        elem.webkitRequestFullscreen();
-    } else if (elem.msRequestFullscreen) {
-        elem.msRequestFullscreen();
+function resizeCanvasForMobile() {
+    if (isMobile()) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight * 0.66; // 66% of screen height
+        // Adjust game elements based on new canvas size if needed
     }
 }
 
 function createMobileControls() {
+    const mobileControls = document.createElement('div');
+    mobileControls.id = 'mobileControls';
+    document.body.appendChild(mobileControls);
+
     const dpad = document.createElement('div');
     dpad.id = 'dpad';
-    document.body.appendChild(dpad);
+    mobileControls.appendChild(dpad);
 
     const stick = document.createElement('div');
     stick.id = 'stick';
-    document.body.appendChild(stick);
+    mobileControls.appendChild(stick);
 
     const directions = ['up', 'down', 'left', 'right'];
     directions.forEach(dir => {
@@ -47,6 +50,8 @@ function createMobileControls() {
     const stickKnob = document.createElement('div');
     stickKnob.id = 'stick-knob';
     stick.appendChild(stickKnob);
+
+    updateMobileControlsColor(); // Add this line
 }
 
 function setupMobileControls() {
@@ -93,7 +98,36 @@ function handleStickTouch(e) {
 
 function handleStickMove(e) {
     e.preventDefault();
-    updateStickPosition(e.touches[0]);
+    const touch = e.touches[0];
+    const stick = document.getElementById('stick');
+    const stickKnob = document.getElementById('stick-knob');
+    const stickRect = stick.getBoundingClientRect();
+    const centerX = stickRect.width / 2;
+    const centerY = stickRect.height / 2;
+    
+    let deltaX = touch.clientX - stickRect.left - centerX;
+    let deltaY = touch.clientY - stickRect.top - centerY;
+    
+    // Limit the stick movement to the container
+    const maxDistance = stickRect.width / 2 - stickKnob.offsetWidth / 2;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    if (distance > maxDistance) {
+        const angle = Math.atan2(deltaY, deltaX);
+        deltaX = Math.cos(angle) * maxDistance;
+        deltaY = Math.sin(angle) * maxDistance;
+    }
+    
+    stickKnob.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+    
+    // Update player angle and fire bullets
+    const angle = Math.atan2(deltaY, deltaX);
+    player.angle = angle;
+    
+    // Fire bullets at a reasonable rate (e.g., every 250ms)
+    if (Date.now() - lastFireTime > 250) {
+        fireBullet();
+        lastFireTime = Date.now();
+    }
 }
 
 function handleStickRelease() {
@@ -437,6 +471,28 @@ function hideSettings() {
     document.getElementById('settingsMenu').style.display = 'none';
 }
 
+function updateMobileControlsColor() {
+    if (isMobile()) {
+        const textColor = ColorScheme.getTextColor();
+        const backgroundColor = ColorScheme.getBackgroundColor();
+        const dpadButtons = document.querySelectorAll('#dpad button');
+        const stick = document.getElementById('stick');
+        const stickKnob = document.getElementById('stick-knob');
+
+        if (dpadButtons.length > 0 && stick && stickKnob) {
+            dpadButtons.forEach(button => {
+                button.style.borderColor = textColor;
+                button.style.color = textColor;
+            });
+
+            stick.style.borderColor = textColor;
+            stickKnob.style.backgroundColor = textColor;
+
+            document.body.style.backgroundColor = backgroundColor;
+        }
+    }
+}
+
 function applyColorMode(mode) {
     document.body.classList.remove('light-mode', 'colorblind-mode');
     if (mode === 'light') {
@@ -449,6 +505,7 @@ function applyColorMode(mode) {
     
     updateColors();
     updateRadioButtonStyles();
+    updateMobileControlsColor();
     
     const modals = document.querySelectorAll('.modal-content');
     modals.forEach(modal => {
@@ -463,17 +520,22 @@ function applyColorMode(mode) {
 function updateMobileControlsColor() {
     if (isMobile()) {
         const textColor = ColorScheme.getTextColor();
+        const backgroundColor = ColorScheme.getBackgroundColor();
         const dpadButtons = document.querySelectorAll('#dpad button');
         const stick = document.getElementById('stick');
         const stickKnob = document.getElementById('stick-knob');
 
-        dpadButtons.forEach(button => {
-            button.style.borderColor = textColor;
-            button.style.color = textColor;
-        });
+        if (dpadButtons.length > 0 && stick && stickKnob) {
+            dpadButtons.forEach(button => {
+                button.style.borderColor = textColor;
+                button.style.color = textColor;
+            });
 
-        stick.style.borderColor = textColor;
-        stickKnob.style.backgroundColor = textColor;
+            stick.style.borderColor = textColor;
+            stickKnob.style.backgroundColor = textColor;
+
+            document.body.style.backgroundColor = backgroundColor;
+        }
     }
 }
 
@@ -591,8 +653,7 @@ function startNewGame() {
 }
 
 function startGame() {
-    //console.log("Starting game...");
-    loadSettings();
+    console.log("Starting game...");
     hideMenu();
     resetGame();
     isGameRunning = true;
@@ -601,10 +662,21 @@ function startGame() {
         cancelAnimationFrame(animationFrameId);
     }
     if (isMobile()) {
-        enterFullscreen();
         createMobileControls();
         setupMobileControls();
+        resizeCanvasForMobile();
+        
+        // Adjust the position of mobile controls
+        const mobileControls = document.getElementById('mobileControls');
+        if (mobileControls) {
+            mobileControls.style.position = 'fixed';
+            mobileControls.style.bottom = '0';
+            mobileControls.style.left = '0';
+            mobileControls.style.width = '100%';
+            mobileControls.style.height = '34vh';
+        }
     }
+    loadSettings(); // Move this after creating mobile controls
     animationFrameId = requestAnimationFrame(gameLoop);
 }
 
