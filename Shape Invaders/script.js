@@ -104,6 +104,11 @@ function updateCustomCursor(position) {
     
     ctx.restore();
 }
+
+function updatePlayerAngle(mouseX, mouseY) {
+    player.angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+}
+
 function createModal(content, isExitModal = false) {
     const modal = document.createElement('div');
     modal.style.position = 'fixed';
@@ -769,25 +774,28 @@ function updatePowerup() {
 }
 
 function fireBullet() {
-    const angle = player.angle - Math.PI / 2;
     const speed = 10;
+    
+    // Calculate the position of the triangle's tip
+    const tipX = player.x + Math.cos(player.angle) * (player.size / 2);
+    const tipY = player.y + Math.sin(player.angle) * (player.size / 2);
     
     if (currentPowerup === 1) {
         for (let i = -1; i <= 1; i++) {
-            const spreadAngle = angle + i * 0.2;
+            const spreadAngle = player.angle + i * 0.2;
             bullets.push({
-                x: player.x,
-                y: player.y,
+                x: tipX,
+                y: tipY,
                 dx: Math.cos(spreadAngle) * speed,
                 dy: Math.sin(spreadAngle) * speed
             });
         }
     } else if (currentPowerup === 2) {
         bullets.push({
-            x: player.x,
-            y: player.y,
-            dx: Math.cos(angle) * speed,
-            dy: Math.sin(angle) * speed,
+            x: tipX,
+            y: tipY,
+            dx: Math.cos(player.angle) * speed,
+            dy: Math.sin(player.angle) * speed,
             isLaser: true,
             length: Math.max(canvas.width, canvas.height) * 2,
             creationTime: Date.now(),
@@ -795,18 +803,18 @@ function fireBullet() {
         });
     } else if (currentPowerup === 3) {
         bullets.push({
-            x: player.x,
-            y: player.y,
-            dx: Math.cos(angle) * speed,
-            dy: Math.sin(angle) * speed,
+            x: tipX,
+            y: tipY,
+            dx: Math.cos(player.angle) * speed,
+            dy: Math.sin(player.angle) * speed,
             isHoning: true
         });
     } else {
         bullets.push({
-            x: player.x,
-            y: player.y,
-            dx: Math.cos(angle) * speed,
-            dy: Math.sin(angle) * speed
+            x: tipX,
+            y: tipY,
+            dx: Math.cos(player.angle) * speed,
+            dy: Math.sin(player.angle) * speed
         });
     }
 }
@@ -894,9 +902,9 @@ function drawPlayer() {
         
         ctx.fillStyle = ColorScheme.getTextColor();
         ctx.beginPath();
-        ctx.moveTo(0, -player.size / 2);
+        ctx.moveTo(player.size / 2, 0);  // Tip of the triangle
+        ctx.lineTo(-player.size / 2, -player.size / 2);
         ctx.lineTo(-player.size / 2, player.size / 2);
-        ctx.lineTo(player.size / 2, player.size / 2);
         ctx.closePath();
         ctx.fill();
 
@@ -1377,7 +1385,7 @@ function gameLoop(currentTime) {
 
     if (!isPaused) {
         updateColors(); // Add this line at the beginning of the game loop
-        
+        updatePlayerAngle(lastMousePosition.x, lastMousePosition.y);
         //console.log("Game is not paused, executing game logic");
         try {
             //console.log("Clearing canvas");
@@ -1530,13 +1538,11 @@ function updatePlayerVelocity() {
     player.dy = (keys['arrowdown'] || keys['s'] ? player.speed : 0) - (keys['arrowup'] || keys['w'] ? player.speed : 0);
 }
 
-canvas.addEventListener('mousemove', e => {
+canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    player.angle = Math.atan2(mouseY - player.y, mouseX - player.x) + Math.PI / 2;
-    
-    lastMousePosition = { x: mouseX, y: mouseY };
+    lastMousePosition.x = e.clientX - rect.left;
+    lastMousePosition.y = e.clientY - rect.top;
+    updatePlayerAngle(lastMousePosition.x, lastMousePosition.y);
 });
 
 window.addEventListener('error', function(e) {
@@ -1756,21 +1762,6 @@ function drawBigBoss() {
             ctx.stroke();
 
             ctx.restore();
-        });
-    }
-}
-
-function createNeonPurpleExplosion(x, y) {
-    const explosionColor = ColorScheme.current === 'light' ? 'rgba(128, 0, 128, 0.8)' : 'rgba(255, 0, 255, 0.8)';
-    for (let i = 0; i < 20; i++) {
-        particles.push({
-            x: x,
-            y: y,
-            size: Math.random() * 5 + 2,
-            color: explosionColor,
-            speedX: Math.random() * 8 - 4,
-            speedY: Math.random() * 8 - 4,
-            life: 60
         });
     }
 }
