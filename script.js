@@ -31,114 +31,79 @@ function createMobileControls() {
     mobileControls.id = 'mobileControls';
     document.body.appendChild(mobileControls);
 
-    const dpad = document.createElement('div');
-    dpad.id = 'dpad';
-    mobileControls.appendChild(dpad);
+    const moveStick = document.createElement('div');
+    moveStick.id = 'moveStick';
+    mobileControls.appendChild(moveStick);
 
-    const stick = document.createElement('div');
-    stick.id = 'stick';
-    mobileControls.appendChild(stick);
+    const aimStick = document.createElement('div');
+    aimStick.id = 'aimStick';
+    mobileControls.appendChild(aimStick);
 
-    const directions = ['up', 'down', 'left', 'right'];
-    directions.forEach(dir => {
-        const button = document.createElement('button');
-        button.id = `dpad-${dir}`;
-        button.innerText = dir.toUpperCase();
-        dpad.appendChild(button);
-    });
+    const moveStickKnob = document.createElement('div');
+    moveStickKnob.id = 'moveStickKnob';
+    moveStick.appendChild(moveStickKnob);
 
-    const stickKnob = document.createElement('div');
-    stickKnob.id = 'stick-knob';
-    stick.appendChild(stickKnob);
+    const aimStickKnob = document.createElement('div');
+    aimStickKnob.id = 'aimStickKnob';
+    aimStick.appendChild(aimStickKnob);
 
-    updateMobileControlsColor(); // Add this line
+    updateMobileControlsColor();
 }
 
 function setupMobileControls() {
-    const dpadButtons = document.querySelectorAll('#dpad button');
-    const stick = document.getElementById('stick');
-    const stickKnob = document.getElementById('stick-knob');
+    const moveStick = document.getElementById('moveStick');
+    const aimStick = document.getElementById('aimStick');
 
-    dpadButtons.forEach(button => {
-        button.addEventListener('touchstart', handleDpadTouch);
-        button.addEventListener('touchend', handleDpadRelease);
-    });
+    moveStick.addEventListener('touchstart', handleMoveStickTouch);
+    moveStick.addEventListener('touchmove', handleMoveStickMove);
+    moveStick.addEventListener('touchend', handleMoveStickRelease);
 
-    stick.addEventListener('touchstart', handleStickTouch);
-    stick.addEventListener('touchmove', handleStickMove);
-    stick.addEventListener('touchend', handleStickRelease);
+    aimStick.addEventListener('touchstart', handleAimStickTouch);
+    aimStick.addEventListener('touchmove', handleAimStickMove);
+    aimStick.addEventListener('touchend', handleAimStickRelease);
 }
 
-function handleDpadTouch(e) {
+function handleMoveStickTouch(e) {
     e.preventDefault();
-    const direction = e.target.id.split('-')[1];
-    switch (direction) {
-        case 'up': player.dy = -player.speed; break;
-        case 'down': player.dy = player.speed; break;
-        case 'left': player.dx = -player.speed; break;
-        case 'right': player.dx = player.speed; break;
-    }
 }
 
-function handleDpadRelease(e) {
-    e.preventDefault();
-    const direction = e.target.id.split('-')[1];
-    switch (direction) {
-        case 'up':
-        case 'down': player.dy = 0; break;
-        case 'left':
-        case 'right': player.dx = 0; break;
-    }
-}
-
-function handleStickTouch(e) {
-    e.preventDefault();
-    updateStickPosition(e.touches[0]);
-}
-
-function handleStickMove(e) {
+function handleMoveStickMove(e) {
     e.preventDefault();
     const touch = e.touches[0];
-    const stick = document.getElementById('stick');
-    const stickKnob = document.getElementById('stick-knob');
-    const stickRect = stick.getBoundingClientRect();
-    const centerX = stickRect.width / 2;
-    const centerY = stickRect.height / 2;
-    
-    let deltaX = touch.clientX - stickRect.left - centerX;
-    let deltaY = touch.clientY - stickRect.top - centerY;
-    
-    // Limit the stick movement to the container
-    const maxDistance = stickRect.width / 2 - stickKnob.offsetWidth / 2;
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    if (distance > maxDistance) {
-        const angle = Math.atan2(deltaY, deltaX);
-        deltaX = Math.cos(angle) * maxDistance;
-        deltaY = Math.sin(angle) * maxDistance;
-    }
-    
-    stickKnob.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-    
-    // Update player angle and fire bullets
-    const angle = Math.atan2(deltaY, deltaX);
-    player.angle = angle;
-    
-    // Fire bullets at a reasonable rate (e.g., every 250ms)
-    if (Date.now() - lastFireTime > 250) {
-        fireBullet();
-        lastFireTime = Date.now();
-    }
+    const stick = document.getElementById('moveStick');
+    const stickKnob = document.getElementById('moveStickKnob');
+    updateStickPosition(touch, stick, stickKnob);
+    updatePlayerMovement();
 }
 
-function handleStickRelease() {
-    const stickKnob = document.getElementById('stick-knob');
+function handleMoveStickRelease() {
+    const stickKnob = document.getElementById('moveStickKnob');
     stickKnob.style.transform = 'translate(0, 0)';
-    player.angle = 0;
+    player.dx = 0;
+    player.dy = 0;
 }
 
-function updateStickPosition(touch) {
-    const stick = document.getElementById('stick');
-    const stickKnob = document.getElementById('stick-knob');
+function handleAimStickTouch(e) {
+    e.preventDefault();
+}
+
+function handleAimStickMove(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const stick = document.getElementById('aimStick');
+    const stickKnob = document.getElementById('aimStickKnob');
+    const { angle } = updateStickPosition(touch, stick, stickKnob);
+    
+    aimAngle = angle;
+}
+
+function handleAimStickRelease() {
+    const stickKnob = document.getElementById('aimStickKnob');
+    stickKnob.style.transform = 'translate(0, 0)';
+    aimAngle = 0;
+}
+
+function updateStickPosition(touch, stick, stickKnob) {
     const rect = stick.getBoundingClientRect();
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
@@ -153,6 +118,24 @@ function updateStickPosition(touch) {
     const knobY = Math.sin(angle) * distance;
     
     stickKnob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+    return { angle, distance };
+}
+
+function updatePlayerMovement() {
+    const moveStick = document.getElementById('moveStick');
+    const moveStickKnob = document.getElementById('moveStickKnob');
+    const { angle, distance } = updateStickPosition(event.touches[0], moveStick, moveStickKnob);
+    
+    const speed = (distance / (moveStick.offsetWidth / 2)) * player.speed;
+    player.dx = Math.cos(angle) * speed;
+    player.dy = Math.sin(angle) * speed;
+}
+
+function updatePlayerAim() {
+    const aimStick = document.getElementById('aimStick');
+    const aimStickKnob = document.getElementById('aimStickKnob');
+    const { angle } = updateStickPosition(event.touches[0], aimStick, aimStickKnob);
+    
     player.angle = angle;
 }
 
@@ -176,7 +159,7 @@ const player = {
     dy: 0,
     angle: 0
 };
-
+let aimAngle = 0;
 let bullets = [];
 let enemies = [];
 let particles = [];
@@ -475,18 +458,16 @@ function updateMobileControlsColor() {
     if (isMobile()) {
         const textColor = ColorScheme.getTextColor();
         const backgroundColor = ColorScheme.getBackgroundColor();
-        const dpadButtons = document.querySelectorAll('#dpad button');
-        const stick = document.getElementById('stick');
-        const stickKnob = document.getElementById('stick-knob');
+        const moveStick = document.getElementById('moveStick');
+        const aimStick = document.getElementById('aimStick');
+        const moveStickKnob = document.getElementById('moveStickKnob');
+        const aimStickKnob = document.getElementById('aimStickKnob');
 
-        if (dpadButtons.length > 0 && stick && stickKnob) {
-            dpadButtons.forEach(button => {
-                button.style.borderColor = textColor;
-                button.style.color = textColor;
-            });
-
-            stick.style.borderColor = textColor;
-            stickKnob.style.backgroundColor = textColor;
+        if (moveStick && aimStick && moveStickKnob && aimStickKnob) {
+            moveStick.style.borderColor = textColor;
+            aimStick.style.borderColor = textColor;
+            moveStickKnob.style.backgroundColor = textColor;
+            aimStickKnob.style.backgroundColor = textColor;
 
             document.body.style.backgroundColor = backgroundColor;
         }
@@ -816,6 +797,12 @@ function spawnStageOneBoss() {
             color: ColorScheme.getRandomColor()
         });
         //console.log("Stage-one boss spawned. Total mini-bosses:", stageOneBosses.length);
+    }
+}
+
+function checkBigBossSpawn() {
+    if (!bigBoss && stageOneBossesDefeated >= 3) {
+        spawnBigBoss();
     }
 }
 
@@ -1545,9 +1532,7 @@ function resetPlayerPosition() {
 }
 
 function updateTopPlayers() {
-    //console.log("Updating top players. Current score:", score, "Player name:", player.name);
     if (!player.name) {
-        //console.log("Player name is undefined, skipping update");
         return;
     }
 
@@ -1569,7 +1554,6 @@ function updateTopPlayers() {
     topPlayers = topPlayers.slice(0, 5);
 
     localStorage.setItem('topPlayers', JSON.stringify(topPlayers));
-    //console.log("Updated top players:", topPlayers);
 }
 
 function updateHighScore() {
@@ -1713,8 +1697,10 @@ function gameLoop(currentTime) {
             if (score > 0 && score % 10 === 0) {
                 updateTopPlayers();
             }
-                
+
+            updateTopPlayers();    
             drawTopPlayers();
+
         } catch (error) {
             console.error("Error in game loop:", error);
             isGameRunning = false;
@@ -1725,18 +1711,6 @@ function gameLoop(currentTime) {
 
     //console.log("Requesting next animation frame");
     animationFrameId = requestAnimationFrame(gameLoop);
-}
-
-function checkBigBossSpawn() {
-    //console.log("Checking big boss spawn conditions:");
-    //console.log("stageOneBossesDefeated:", stageOneBossesDefeated);
-    //console.log("bigBoss exists:", !!bigBoss);
-    if (!bigBoss && stageOneBossesDefeated >= 4) {
-        //console.log("Conditions met for big boss spawn");
-        spawnBigBoss();
-    } else {
-        //console.log("Conditions not met for big boss spawn");
-    }
 }
 
 const keys = {};
@@ -2131,6 +2105,24 @@ function spawnEnemies(count) {
 }
 
 function drawTopPlayers() {
+    if (isMobile()) {
+        drawPlayerRank();
+    } else {
+        drawFullTopPlayersList();
+    }
+}
+
+function drawPlayerRank() {
+    const playerRank = getPlayerRank();
+    if (playerRank > 0) {
+        ctx.font = "16px 'Press Start 2P'";
+        ctx.fillStyle = ColorScheme.getTextColor();
+        ctx.textAlign = 'right';
+        ctx.fillText(`#${playerRank}`, canvas.width - 10, 30);
+    }
+}
+
+function drawFullTopPlayersList() {
     ctx.font = "16px 'Press Start 2P'";
     ctx.fillStyle = ColorScheme.getTextColor();
     ctx.textAlign = 'right';
@@ -2140,7 +2132,22 @@ function drawTopPlayers() {
         const player = topPlayers[i] || { name: '---', score: 0 };
         ctx.fillText(`${i + 1}. ${player.name}: ${player.score}`, canvas.width - 10, 60 + i * 25);
     }
-    //console.log("Drawing top players:", topPlayers); // For debugging
+}
+
+function getPlayerRank() {
+    const playerScore = score;
+    const playerName = player.name;
+    
+    // Create a copy of topPlayers and add the current player
+    const allPlayers = [...topPlayers, { name: playerName, score: playerScore }];
+    
+    // Sort all players by score in descending order
+    allPlayers.sort((a, b) => b.score - a.score);
+    
+    // Find the rank of the current player
+    const rank = allPlayers.findIndex(p => p.name === playerName && p.score === playerScore) + 1;
+    
+    return rank <= 5 ? rank : 0; // Return 0 if not in top 5
 }
 
 function initializeTopPlayers() {
