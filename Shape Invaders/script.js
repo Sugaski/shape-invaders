@@ -1048,7 +1048,7 @@ function spawnEnemy() {
         enemies.push({
             x: x,
             y: y,
-            size: 20,
+            size: 25,
             sides: Math.floor(Math.random() * 3) + 3,
             dx: Math.cos(angle) * speed,
             dy: Math.sin(angle) * speed,
