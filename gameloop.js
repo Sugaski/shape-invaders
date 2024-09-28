@@ -10,7 +10,7 @@ import {
     checkStageOneBossCollisions,
     spawnStageOneBoss,
     destroyStageOneBoss
-} from './enemies.js';
+} from './.JS/enemies.js';
 
 // Import functions from mobile.js
 import {
@@ -19,7 +19,7 @@ import {
     createMobileControls,
     setupMobileControls,
     updateMobileControlsColor
-} from './mobile.js';
+} from './.JS/mobile.js';
 
 // Import functions from globals.js
 import {
@@ -54,7 +54,7 @@ import {
     updateTopPlayers,
     loseLife,
     gameOver
-} from './globals.js';
+} from './.JS/globals.js';
 
 function gameLoop(currentTime) {
     if (!isGameRunning || isPaused) {
