@@ -66,7 +66,7 @@ function handleMoveStickMove(e) {
     
     player.dx = Math.cos(angle) * speed;
     player.dy = Math.sin(angle) * speed;
-    player.angle = angle;
+    player.angle = angle; // Update the angle for mobile mode
 
     console.log('Joystick update:', { 
         angle, 
@@ -74,8 +74,7 @@ function handleMoveStickMove(e) {
         speed, 
         dx: player.dx, 
         dy: player.dy,
-        playerSpeed: player.speed,
-        MOBILE_SPEED_MULTIPLIER
+        playerAngle: player.angle
     });
 }
 
@@ -134,12 +133,12 @@ let currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
 const POWERUP_DURATION = 20000; // 20 seconds
 const POWERUP_FLASH_DURATION = 5000;
 const MAX_ENEMIES = 15;
-const MOBILE_SPEED_MULTIPLIER = 3;
+const MOBILE_SPEED_MULTIPLIER = .5;
 const player = {
     x: canvas.width / 2,
     y: canvas.height / 2,
     size: 35,
-    speed: 6,
+    speed: 200,
     dx: 0,
     dy: 0,
     angle: 0
@@ -691,42 +690,6 @@ function gameOver() {
     showGameOverScreen();
 }
 
-function showGameOverScreen() {
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    if (ColorScheme.current === 'dark' || ColorScheme.current === 'colorblind') {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-    
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.font = '48px "Press Start 2P", cursive';
-    
-    const centerY = canvas.height / 2;
-    
-    // Add neon glow effect
-    ctx.shadowColor = ColorScheme.getTextColor();
-    ctx.shadowBlur = 10;
-    
-    // Draw "GAME OVER"
-    ctx.fillStyle = ColorScheme.getTextColor();
-    ctx.fillText('GAME OVER', canvas.width / 2, centerY - 40);
-    
-    // Set the font for "Press SPACE to continue"
-    ctx.font = '24px "Press Start 2P", cursive';
-    
-    // Draw "Press SPACE to continue"
-    ctx.fillText('Press SPACE to continue', canvas.width / 2, centerY + 40);
-    
-    // Reset shadow blur
-    ctx.shadowBlur = 0;
-    
-    // Add event listener for space key
-    window.addEventListener('keydown', handleGameOverKeyPress);
-}
-
 function handleGameOverKeyPress(e) {
     if (e.code === 'Space') {
         e.preventDefault(); // Prevent any default space key behavior
@@ -1207,26 +1170,17 @@ function movePlayer(currentTime) {
     const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
     lastTime = currentTime;
 
-    // Update player position
-    player.x += player.dx * deltaTime * player.speed;
-    player.y += player.dy * deltaTime * player.speed;
-
-    // Clamp player position to canvas boundaries
+    player.x += player.dx * deltaTime;
+    player.y += player.dy * deltaTime;
     player.x = Math.max(player.size / 2, Math.min(canvas.width - player.size / 2, player.x));
     player.y = Math.max(player.size / 2, Math.min(canvas.height - player.size / 2, player.y));
-
-    // Update player's angle based on movement direction if moving
-    if (player.dx !== 0 || player.dy !== 0) {
-        player.angle = Math.atan2(player.dy, player.dx);
-    }
 
     console.log('Player position updated:', { 
         x: player.x, 
         y: player.y, 
         dx: player.dx, 
         dy: player.dy,
-        speed: player.speed,
-        deltaTime: deltaTime
+        angle: player.angle // Log the angle to verify it's not changing
     });
 }
 
@@ -1757,11 +1711,19 @@ function updatePlayerVelocity() {
 }
 
 canvas.addEventListener('mousemove', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    lastMousePosition.x = e.clientX - rect.left;
-    lastMousePosition.y = e.clientY - rect.top;
-    updatePlayerAngle(lastMousePosition.x, lastMousePosition.y);
+    if (!isMobile()) {
+        const rect = canvas.getBoundingClientRect();
+        lastMousePosition.x = e.clientX - rect.left;
+        lastMousePosition.y = e.clientY - rect.top;
+        updatePlayerAngle(lastMousePosition.x, lastMousePosition.y);
+    }
 });
+
+function updatePlayerAngle(mouseX, mouseY) {
+    if (!isMobile()) {
+        player.angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+    }
+}
 
 window.addEventListener('error', function(e) {
     console.error("Global error:", e.error);
@@ -2025,7 +1987,6 @@ function showGameOverScreen() {
     
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = '48px "Press Start 2P", cursive';
     
     const centerY = canvas.height / 2;
     
@@ -2033,15 +1994,51 @@ function showGameOverScreen() {
     ctx.shadowBlur = 10;
     
     ctx.fillStyle = ColorScheme.getTextColor();
-    ctx.fillText('GAME OVER', canvas.width / 2, centerY - 40);
-    
-    ctx.font = '24px "Press Start 2P", cursive';
-    
-    ctx.fillText('Press SPACE to continue', canvas.width / 2, centerY + 40);
+
+    if (isMobile()) {
+        // Mobile version
+        ctx.font = '24px "Press Start 2P", cursive';
+        ctx.fillText('GAME OVER', canvas.width / 2, centerY - 60);
+        
+        ctx.font = '16px "Press Start 2P", cursive';
+        ctx.fillText(`Score: ${score}`, canvas.width / 2, centerY - 20);
+        ctx.fillText(`High Score: ${highScore}`, canvas.width / 2, centerY + 20);
+        
+        ctx.font = '12px "Press Start 2P", cursive';
+        ctx.fillText('Tap to continue', canvas.width / 2, centerY + 60);
+    } else {
+        // Desktop version (unchanged)
+        ctx.font = '48px "Press Start 2P", cursive';
+        ctx.fillText('GAME OVER', canvas.width / 2, centerY - 40);
+        
+        ctx.font = '24px "Press Start 2P", cursive';
+        ctx.fillText(`Score: ${score}`, canvas.width / 2, centerY + 20);
+        ctx.fillText(`High Score: ${highScore}`, canvas.width / 2, centerY + 60);
+        
+        ctx.fillText('Press SPACE to continue', canvas.width / 2, centerY + 120);
+    }
     
     ctx.shadowBlur = 0;
     
-    window.addEventListener('keydown', handleGameOverKeyPress);
+    if (isMobile()) {
+        canvas.addEventListener('touchstart', handleGameOverTouch);
+    } else {
+        window.addEventListener('keydown', handleGameOverKeyPress);
+    }
+}
+
+function handleGameOverTouch(e) {
+    e.preventDefault();
+    canvas.removeEventListener('touchstart', handleGameOverTouch);
+    startNewGame();
+}
+
+function handleGameOverKeyPress(e) {
+    if (e.code === 'Space') {
+        e.preventDefault();
+        window.removeEventListener('keydown', handleGameOverKeyPress);
+        startNewGame();
+    }
 }
 
 function handleGameOverKeyPress(e) {
