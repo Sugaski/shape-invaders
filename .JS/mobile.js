@@ -1,8 +1,8 @@
-function isMobile() {
+export function isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-function resizeCanvasForMobile() {
+export function resizeCanvasForMobile() {
     if (isMobile()) {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight * 0.66; // 66% of screen height
@@ -10,7 +10,7 @@ function resizeCanvasForMobile() {
     }
 }
 
-function createMobileControls() {
+export function createMobileControls() {
     const mobileControls = document.createElement('div');
     mobileControls.id = 'mobileControls';
     document.body.appendChild(mobileControls);
@@ -26,7 +26,7 @@ function createMobileControls() {
     updateMobileControlsColor();
 }
 
-function setupMobileControls() {
+export function setupMobileControls() {
     const moveStick = document.getElementById('moveStick');
 
     moveStick.addEventListener('touchstart', handleMoveStickTouch);
@@ -34,11 +34,11 @@ function setupMobileControls() {
     moveStick.addEventListener('touchend', handleMoveStickRelease);
 }
 
-function handleMoveStickTouch(e) {
+export function handleMoveStickTouch(e) {
     e.preventDefault();
 }
 
-function handleMoveStickMove(e) {
+export function handleMoveStickMove(e) {
     e.preventDefault();
     const touch = e.touches[0];
     const stick = document.getElementById('moveStick');
@@ -62,7 +62,7 @@ function handleMoveStickMove(e) {
     });
 }
 
-function handleMoveStickRelease() {
+export function handleMoveStickRelease() {
     const stickKnob = document.getElementById('moveStickKnob');
     stickKnob.style.transform = 'translate(0, 0)';
     player.dx = 0;
@@ -70,7 +70,7 @@ function handleMoveStickRelease() {
     console.log('Joystick released, player velocity reset');
 }
 
-function updateStickPosition(touch, stick, stickKnob) {
+export function updateStickPosition(touch, stick, stickKnob) {
     const rect = stick.getBoundingClientRect();
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
@@ -88,7 +88,7 @@ function updateStickPosition(touch, stick, stickKnob) {
     return { angle, distance };
 }
 
-function updatePlayerMovement() {
+export function updatePlayerMovement() {
     const moveStick = document.getElementById('moveStick');
     const moveStickKnob = document.getElementById('moveStickKnob');
     const { angle, distance } = updateStickPosition(event.touches[0], moveStick, moveStickKnob);
@@ -98,7 +98,7 @@ function updatePlayerMovement() {
     player.dy = Math.sin(angle) * speed;
 }
 
-function updatePlayerAim() {
+export function updatePlayerAim() {
     const aimStick = document.getElementById('aimStick');
     const aimStickKnob = document.getElementById('aimStickKnob');
     const { angle } = updateStickPosition(event.touches[0], aimStick, aimStickKnob);
@@ -106,7 +106,7 @@ function updatePlayerAim() {
     player.angle = angle;
 }
 
-function updateMobileControlsColor() {
+export function updateMobileControlsColor() {
     if (isMobile()) {
         const textColor = ColorScheme.getTextColor();
         const backgroundColor = ColorScheme.getBackgroundColor();

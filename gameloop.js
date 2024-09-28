@@ -1,3 +1,61 @@
+// Import functions from enemies.js
+import {
+    spawnEnemy,
+    moveEnemies,
+    spawnEnemies,
+    drawEnemies,
+    drawPolygon,
+    drawStageOneBosses,
+    moveStageOneBosses,
+    checkStageOneBossCollisions,
+    spawnStageOneBoss,
+    destroyStageOneBoss
+} from './enemies.js';
+
+// Import functions from mobile.js
+import {
+    isMobile,
+    resizeCanvasForMobile,
+    createMobileControls,
+    setupMobileControls,
+    updateMobileControlsColor
+} from './mobile.js';
+
+// Import functions from globals.js
+import {
+    updateColors,
+    updatePlayerAngle,
+    movePlayer,
+    moveBullets,
+    moveParticles,
+    moveBigBoss,
+    moveBigBossProjectiles,
+    checkCollisions,
+    checkBigBossProjectileCollisions,
+    checkBigBossCollisions,
+    checkPowerupCollisions,
+    updatePowerup,
+    updatePowerups,
+    updateHoningMissiles,
+    fireBullet,
+    drawPlayer,
+    drawBullets,
+    drawBigBoss,
+    drawBigBossProjectiles,
+    drawPowerups,
+    drawParticles,
+    drawScore,
+    drawLives,
+    drawTopPlayers,
+    drawBossCounters,
+    checkBigBossSpawn,
+    createGoldenExplosion,
+    resetAfterBigBoss,
+    updateTopPlayers,
+    loseLife,
+    gameOver
+} from './globals.js';
+
 function gameLoop(currentTime) {
     if (!isGameRunning || isPaused) {
         cancelAnimationFrame(animationFrameId);
