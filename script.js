@@ -35,32 +35,19 @@ function createMobileControls() {
     moveStick.id = 'moveStick';
     mobileControls.appendChild(moveStick);
 
-    const aimStick = document.createElement('div');
-    aimStick.id = 'aimStick';
-    mobileControls.appendChild(aimStick);
-
     const moveStickKnob = document.createElement('div');
     moveStickKnob.id = 'moveStickKnob';
     moveStick.appendChild(moveStickKnob);
-
-    const aimStickKnob = document.createElement('div');
-    aimStickKnob.id = 'aimStickKnob';
-    aimStick.appendChild(aimStickKnob);
 
     updateMobileControlsColor();
 }
 
 function setupMobileControls() {
     const moveStick = document.getElementById('moveStick');
-    const aimStick = document.getElementById('aimStick');
 
     moveStick.addEventListener('touchstart', handleMoveStickTouch);
     moveStick.addEventListener('touchmove', handleMoveStickMove);
     moveStick.addEventListener('touchend', handleMoveStickRelease);
-
-    aimStick.addEventListener('touchstart', handleAimStickTouch);
-    aimStick.addEventListener('touchmove', handleAimStickMove);
-    aimStick.addEventListener('touchend', handleAimStickRelease);
 }
 
 function handleMoveStickTouch(e) {
@@ -72,8 +59,24 @@ function handleMoveStickMove(e) {
     const touch = e.touches[0];
     const stick = document.getElementById('moveStick');
     const stickKnob = document.getElementById('moveStickKnob');
-    updateStickPosition(touch, stick, stickKnob);
-    updatePlayerMovement();
+    const { angle, distance } = updateStickPosition(touch, stick, stickKnob);
+    
+    const maxSpeed = player.speed * MOBILE_SPEED_MULTIPLIER;
+    const speed = (distance / (stick.offsetWidth / 2)) * maxSpeed;
+    
+    player.dx = Math.cos(angle) * speed;
+    player.dy = Math.sin(angle) * speed;
+    player.angle = angle;
+
+    console.log('Joystick update:', { 
+        angle, 
+        distance, 
+        speed, 
+        dx: player.dx, 
+        dy: player.dy,
+        playerSpeed: player.speed,
+        MOBILE_SPEED_MULTIPLIER
+    });
 }
 
 function handleMoveStickRelease() {
@@ -81,26 +84,7 @@ function handleMoveStickRelease() {
     stickKnob.style.transform = 'translate(0, 0)';
     player.dx = 0;
     player.dy = 0;
-}
-
-function handleAimStickTouch(e) {
-    e.preventDefault();
-}
-
-function handleAimStickMove(e) {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const stick = document.getElementById('aimStick');
-    const stickKnob = document.getElementById('aimStickKnob');
-    const { angle } = updateStickPosition(touch, stick, stickKnob);
-    
-    aimAngle = angle;
-}
-
-function handleAimStickRelease() {
-    const stickKnob = document.getElementById('aimStickKnob');
-    stickKnob.style.transform = 'translate(0, 0)';
-    aimAngle = 0;
+    console.log('Joystick released, player velocity reset');
 }
 
 function updateStickPosition(touch, stick, stickKnob) {
@@ -150,6 +134,7 @@ let currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
 const POWERUP_DURATION = 20000; // 20 seconds
 const POWERUP_FLASH_DURATION = 5000;
 const MAX_ENEMIES = 15;
+const MOBILE_SPEED_MULTIPLIER = 3;
 const player = {
     x: canvas.width / 2,
     y: canvas.height / 2,
@@ -1215,11 +1200,34 @@ function drawBossCounters() {
         canvas.height - bottomPadding);
 }
 
-function movePlayer() {
-    player.x += player.dx;
-    player.y += player.dy;
+let lastTime = 0;
+
+function movePlayer(currentTime) {
+    if (!lastTime) lastTime = currentTime;
+    const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
+    lastTime = currentTime;
+
+    // Update player position
+    player.x += player.dx * deltaTime * player.speed;
+    player.y += player.dy * deltaTime * player.speed;
+
+    // Clamp player position to canvas boundaries
     player.x = Math.max(player.size / 2, Math.min(canvas.width - player.size / 2, player.x));
     player.y = Math.max(player.size / 2, Math.min(canvas.height - player.size / 2, player.y));
+
+    // Update player's angle based on movement direction if moving
+    if (player.dx !== 0 || player.dy !== 0) {
+        player.angle = Math.atan2(player.dy, player.dx);
+    }
+
+    console.log('Player position updated:', { 
+        x: player.x, 
+        y: player.y, 
+        dx: player.dx, 
+        dy: player.dy,
+        speed: player.speed,
+        deltaTime: deltaTime
+    });
 }
 
 function moveBullets() {
@@ -1612,7 +1620,7 @@ function gameLoop(currentTime) {
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             updateCustomCursor(lastMousePosition);    
             //console.log("Moving game objects");
-            if (typeof movePlayer === 'function') movePlayer();
+            if (typeof movePlayer === 'function') movePlayer(currentTime);
             if (typeof moveBullets === 'function') moveBullets();
             if (typeof moveEnemies === 'function') moveEnemies();
             if (typeof moveStageOneBosses === 'function') moveStageOneBosses();
@@ -1743,8 +1751,9 @@ window.addEventListener('keyup', e => {
 });
 
 function updatePlayerVelocity() {
-    player.dx = (keys['arrowright'] || keys['d'] ? player.speed : 0) - (keys['arrowleft'] || keys['a'] ? player.speed : 0);
-    player.dy = (keys['arrowdown'] || keys['s'] ? player.speed : 0) - (keys['arrowup'] || keys['w'] ? player.speed : 0);
+    const speedMultiplier = isMobile() ? MOBILE_SPEED_MULTIPLIER : 1;
+    player.dx = ((keys['arrowright'] || keys['d'] ? 1 : 0) - (keys['arrowleft'] || keys['a'] ? 1 : 0)) * player.speed * speedMultiplier;
+    player.dy = ((keys['arrowdown'] || keys['s'] ? 1 : 0) - (keys['arrowup'] || keys['w'] ? 1 : 0)) * player.speed * speedMultiplier;
 }
 
 canvas.addEventListener('mousemove', (e) => {
