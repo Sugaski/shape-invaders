@@ -1,3 +1,5 @@
+import { canvas, player, ColorScheme } from './globals.js';
+
 export function isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }

@@ -1,31 +1,5 @@
-export let aimAngle = 0;
-export let bullets = [];
-export let enemies = [];
-export let particles = [];
-export let score = 0;
-export let highScore = parseInt(localStorage.getItem('highScore')) || 0;
-export let lives = 3;
-export let lastTime = 0;
-export let lastExtraLife = 0;
-export let playerInvulnerable = false;
-export let playerBlinkInterval;
-export let stageOneBosses = [];
-export let powerups = [];
-export let currentPowerup = null;
-export let powerupEndTime = 0;
-export let projectilesDestroyed = 0;
-export let isGameRunning = false;
-export let animationFrameId = null;
-export let playerName = '';
-export let topPlayers = [];
-export let highScoreName = localStorage.getItem('highScoreName') || '';
-export let gameState = 'menu';
-export let isPaused = false;
-export let pausedPowerups = [];
-export let powerupsPausedTime = 0;
-export let lastMousePosition = { x: 0, y: 0 };
-export let currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
-export let lastFireTime = 0;
+import { isMobile, resizeCanvasForMobile, updateMobileControlsColor } from './mobile.js';
+import { gameLoop } from './gameloop.js';
 
 export const fireInterval = 200;
 export const keys = {};
@@ -80,6 +54,39 @@ export const ColorScheme = {
     }
 };
 
+export let bigBoss = null;
+export let aimAngle = 0;
+export let bullets = [];
+export let enemies = [];
+export let particles = [];
+export let score = 0;
+export let highScore = parseInt(localStorage.getItem('highScore')) || 0;
+export let lives = 3;
+export let lastTime = 0;
+export let lastExtraLife = 0;
+export let playerInvulnerable = false;
+export let playerBlinkInterval;
+export let stageOneBosses = [];
+export let powerups = [];
+export let currentPowerup = null;
+export let powerupEndTime = 0;
+export let projectilesDestroyed = 0;
+export let bigBossesDestroyed = 0;
+export let isGameRunning = false;
+export let animationFrameId = null;
+export let playerName = '';
+export let topPlayers = [];
+export let highScoreName = localStorage.getItem('highScoreName') || '';
+export let gameState = 'menu';
+export let isPaused = false;
+export let pausedPowerups = [];
+export let powerupsPausedTime = 0;
+export let lastMousePosition = { x: 0, y: 0 };
+export let currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
+export let lastFireTime = 0;
+export let stageOneBossesDefeated = 0;
+export let stageOneBossesDestroyed = 0;
+
 export function resizeCanvas() {
     if (isMobile()) {
         resizeCanvasForMobile();
@@ -117,7 +124,12 @@ export function updateCustomCursor(position) {
 }
 
 export function updatePlayerAngle(mouseX, mouseY) {
+    if (!isMobile()) {
+        player.angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+    }
+    else {
     player.angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+    }
 }
 
 export function createModal(content, isExitModal = false) {
@@ -461,7 +473,28 @@ export function startGame() {
             if (name) {
                 player.name = name;
                 resetGame();
-                startGame();
+                isGameRunning = true;
+                isPaused = false;
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+                if (isMobile()) {
+                    createMobileControls();
+                    setupMobileControls();
+                    resizeCanvasForMobile();
+                    
+                    // Adjust the position of mobile controls
+                    const mobileControls = document.getElementById('mobileControls');
+                    if (mobileControls) {
+                        mobileControls.style.position = 'fixed';
+                        mobileControls.style.bottom = '0';
+                        mobileControls.style.left = '0';
+                        mobileControls.style.width = '100%';
+                        mobileControls.style.height = '34vh';
+                    }
+                }
+                loadSettings(); // Move this after creating mobile controls
+                animationFrameId = requestAnimationFrame(gameLoop);
             } else {
                 showMenu();
             }
@@ -471,29 +504,6 @@ export function startGame() {
             showMenu();
         });
     hideMenu();
-    resetGame();
-    isGameRunning = true;
-    isPaused = false;
-    if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-    }
-    if (isMobile()) {
-        createMobileControls();
-        setupMobileControls();
-        resizeCanvasForMobile();
-        
-        // Adjust the position of mobile controls
-        const mobileControls = document.getElementById('mobileControls');
-        if (mobileControls) {
-            mobileControls.style.position = 'fixed';
-            mobileControls.style.bottom = '0';
-            mobileControls.style.left = '0';
-            mobileControls.style.width = '100%';
-            mobileControls.style.height = '34vh';
-        }
-    }
-    loadSettings(); // Move this after creating mobile controls
-    animationFrameId = requestAnimationFrame(gameLoop);
 }
 
 export function resetGame() {
@@ -517,7 +527,7 @@ export function resetGame() {
     stageOneBossesDefeated = 0;
     projectilesDestroyed = 0;
     stageOneBossesDestroyed = 0;
-    bigBossesDestroyed = 0;
+    bigBossesDestroyed = 0; 
     lastFireTime = 0;
     currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
 }
@@ -539,14 +549,6 @@ export function gameOver() {
     stageOneBossesDefeated = 0;
     
     showGameOverScreen();
-}
-
-export function handleGameOverKeyPress(e) {
-    if (e.code === 'Space') {
-        e.preventDefault(); // Prevent any default space key behavior
-        window.removeEventListener('keydown', handleGameOverKeyPress);
-        startNewGame();
-    }
 }
 
 export function updateContinueButton() {
@@ -811,6 +813,11 @@ export function drawScore() {
 }
 
 export function drawTopPlayers() {
+    if (isMobile()) {
+        drawPlayerRank();
+    } else {
+        drawFullTopPlayersList();
+    }
     ctx.font = "16px 'Press Start 2P'";
     ctx.fillStyle = ColorScheme.getTextColor();
     ctx.textAlign = 'right';
@@ -1114,6 +1121,24 @@ export function loseLife() {
     }
 }
 
+export function createGoldenExplosion(x, y) {
+    const baseColor = ColorScheme.current === 'light' ? '128, 100, 0' : '255, 215, 0';
+    for (let i = 0; i < 100; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1 + Math.random() * 5;
+        const size = 2 + Math.random() * 4;
+        particles.push({
+            x: x,
+            y: y,
+            dx: Math.cos(angle) * speed,
+            dy: Math.sin(angle) * speed,
+            size: size,
+            color: `rgba(${baseColor}, ${Math.random() * 0.5 + 0.5})`,
+            life: 120 + Math.random() * 60
+        });
+    }
+}
+
 export function resetPlayerPosition() {
     player.x = canvas.width / 2;
     player.y = canvas.height / 2;
@@ -1224,12 +1249,6 @@ canvas.addEventListener('mousemove', (e) => {
     }
 });
 
-export function updatePlayerAngle(mouseX, mouseY) {
-    if (!isMobile()) {
-        player.angle = Math.atan2(mouseY - player.y, mouseX - player.x);
-    }
-}
-
 window.addEventListener('error', function(e) {
     console.error("Global error:", e.error);
     console.error("Error message:", e.message);
@@ -1277,19 +1296,6 @@ export function resumePowerups() {
 export function getRandomNeonColor() {
     const neonColors = ['#FF00FF', '#00FFFF', '#FF00FF', '#FFFF00', '#00FF00'];
     return neonColors[Math.floor(Math.random() * neonColors.length)];
-}
-
-export function gameOver() {
-    console.log("Game Over function called");
-    isGameRunning = false;
-    isPaused = true;
-    if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-    }
-    updateHighScore();
-    updateTopPlayers();
-    showGameOverScreen();
 }
 
 export function showGameOverScreen() {
@@ -1356,14 +1362,6 @@ export function handleGameOverKeyPress(e) {
     }
 }
 
-export function handleGameOverKeyPress(e) {
-    if (e.code === 'Space') {
-        e.preventDefault(); 
-        window.removeEventListener('keydown', handleGameOverKeyPress);
-        startNewGame();
-    }
-}
-
 export function startNewGame() {
     console.log("Starting new game...");
     showNamePrompt()
@@ -1380,40 +1378,6 @@ export function startNewGame() {
             console.error("Error starting new game:", error);
             showMenu();
         });
-}
-
-export function resetGame() {
-    console.log("Resetting game...");
-    player.x = canvas.width / 2;
-    player.y = canvas.height / 2;
-    player.angle = 0;
-    player.dx = 0;
-    player.dy = 0;
-    bullets = [];
-    enemies = [];
-    particles = [];
-    score = 0;
-    lives = 3;
-    lastExtraLife = 0;
-    stageOneBosses = [];
-    powerups = [];
-    currentPowerup = null;
-    powerupEndTime = 0;
-    bigBoss = null;
-    stageOneBossesDefeated = 0;
-    projectilesDestroyed = 0;
-    stageOneBossesDestroyed = 0;
-    bigBossesDestroyed = 0;
-    lastFireTime = 0;
-    currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
-}
-
-export function drawTopPlayers() {
-    if (isMobile()) {
-        drawPlayerRank();
-    } else {
-        drawFullTopPlayersList();
-    }
 }
 
 export function drawPlayerRank() {
@@ -1436,6 +1400,10 @@ export function drawFullTopPlayersList() {
         const player = topPlayers[i] || { name: '---', score: 0 };
         ctx.fillText(`${i + 1}. ${player.name}: ${player.score}`, canvas.width - 10, 60 + i * 25);
     }
+}
+
+export function setStageOneBossesDefeated(value) {
+    stageOneBossesDefeated = value;
 }
 
 export function getPlayerRank() {

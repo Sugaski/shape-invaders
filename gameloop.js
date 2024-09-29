@@ -9,7 +9,11 @@ import {
     moveStageOneBosses,
     checkStageOneBossCollisions,
     spawnStageOneBoss,
-    destroyStageOneBoss
+    destroyStageOneBoss,
+    drawBigBoss,  // Make sure this is imported
+    moveBigBoss,
+    checkBigBossSpawn,
+    resetAfterBigBoss
 } from './JS/enemies.js';
 
 // Import functions from mobile.js
@@ -28,11 +32,7 @@ import {
     movePlayer,
     moveBullets,
     moveParticles,
-    moveBigBoss,
-    moveBigBossProjectiles,
     checkCollisions,
-    checkBigBossProjectileCollisions,
-    checkBigBossCollisions,
     checkPowerupCollisions,
     updatePowerup,
     updatePowerups,
@@ -40,23 +40,19 @@ import {
     fireBullet,
     drawPlayer,
     drawBullets,
-    drawBigBoss,
-    drawBigBossProjectiles,
     drawPowerups,
     drawParticles,
     drawScore,
     drawLives,
     drawTopPlayers,
     drawBossCounters,
-    checkBigBossSpawn,
     createGoldenExplosion,
-    resetAfterBigBoss,
     updateTopPlayers,
     loseLife,
     gameOver
 } from './JS/globals.js';
 
-function gameLoop(currentTime) {
+export function gameLoop(currentTime) {
     if (!isGameRunning || isPaused) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
@@ -79,7 +75,6 @@ function gameLoop(currentTime) {
             if (typeof moveStageOneBosses === 'function') moveStageOneBosses();
             if (typeof moveParticles === 'function') moveParticles();
             if (typeof moveBigBoss === 'function') moveBigBoss();
-            if (typeof moveBigBossProjectiles === 'function') moveBigBossProjectiles();
                 
             //console.log("Spawning entities");
             if (typeof spawnEnemy === 'function') spawnEnemy();
@@ -88,8 +83,6 @@ function gameLoop(currentTime) {
             //console.log("Checking collisions");
             if (typeof checkCollisions === 'function') checkCollisions();
             if (typeof checkStageOneBossCollisions === 'function') checkStageOneBossCollisions();
-            if (typeof checkBigBossProjectileCollisions === 'function') checkBigBossProjectileCollisions();
-            if (typeof checkBigBossCollisions === 'function') checkBigBossCollisions();
             if (typeof checkPowerupCollisions === 'function') checkPowerupCollisions();
                 
             //console.log("Updating game state");
@@ -103,19 +96,20 @@ function gameLoop(currentTime) {
             }
 
             //console.log("Drawing game objects");
-            if (typeof drawPlayer === 'function') drawPlayer();
-            if (typeof drawBullets === 'function') drawBullets();
-            if (typeof drawEnemies === 'function') drawEnemies();
-            if (typeof drawStageOneBosses === 'function') drawStageOneBosses();
-            if (typeof drawBigBoss === 'function') drawBigBoss();
-            if (typeof drawBigBossProjectiles === 'function') drawBigBossProjectiles();
-            if (typeof drawPowerups === 'function') drawPowerups();
-            if (typeof drawParticles === 'function') drawParticles();
+            drawPlayer();
+            drawEnemies();
+            drawBullets();
+            drawStageOneBosses();
+            if (bigBoss) {
+                drawBigBoss();  // This will also draw the big boss projectiles
+            }
+            drawPowerups();
+            drawParticles();
             drawScore();
             drawLives();
             if (typeof drawTopPlayers === 'function') drawTopPlayers();
             drawBossCounters();
-            checkBigBossSpawn();
+            if (typeof checkBigBossSpawn === 'function') checkBigBossSpawn();
 
             if (bigBoss) {
                 //console.log("Updating big boss");

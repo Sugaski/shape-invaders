@@ -1,3 +1,5 @@
+import { setStageOneBossesDefeated, bigBossesDestroyed } from './globals.js';
+
 //--------------------------------------- Enemies Logic ----------------------------------------
 
 export function spawnEnemies(count) {
@@ -44,14 +46,6 @@ export function moveEnemies() {
             enemy.dy *= -1;
         }
     });
-}
-
-export function spawnEnemies(count) {
-    const spawnCount = Math.min(count, MAX_ENEMIES - enemies.length);
-    //console.log(`Spawning ${spawnCount} enemies`);
-    for (let i = 0; i < spawnCount; i++) {
-        spawnEnemy();
-    }
 }
 
 export function drawEnemies() {
@@ -220,6 +214,9 @@ export function destroyStageOneBoss(index) {
     //console.log("Stage-one boss destroyed. Total destroyed:", stageOneBossesDestroyed);
     //console.log("Stage-one bosses defeated:", stageOneBossesDefeated);
     //console.log("New enemy spawn chance:", currentEnemySpawnChance);
+    
+    // When incrementing stageOneBossesDefeated
+    setStageOneBossesDefeated(stageOneBossesDefeated + 1);
 }
 
 //------------------------------------ Stage Two Boss Logic ------------------------------------
@@ -391,24 +388,6 @@ export function launchBigBossProjectile() {
         invulnerableTime: 5000, // 5 seconds of invulnerability
         spawnTime: Date.now() // Record spawn time
     });
-}
-
-export function createGoldenExplosion(x, y) {
-    const baseColor = ColorScheme.current === 'light' ? '128, 100, 0' : '255, 215, 0';
-    for (let i = 0; i < 100; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 1 + Math.random() * 5;
-        const size = 2 + Math.random() * 4;
-        particles.push({
-            x: x,
-            y: y,
-            dx: Math.cos(angle) * speed,
-            dy: Math.sin(angle) * speed,
-            size: size,
-            color: `rgba(${baseColor}, ${Math.random() * 0.5 + 0.5})`,
-            life: 120 + Math.random() * 60
-        });
-    }
 }
 
 export function resetAfterBigBoss() {
