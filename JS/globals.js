@@ -1,19 +1,20 @@
 import { isMobile, resizeCanvasForMobile, updateMobileControlsColor } from './mobile.js';
-import { gameLoop } from './gameloop.js';
+import { gameLoop } from '../gameloop.js';
+
 
 export const fireInterval = 200;
-export const keys = {};
 export const menuScreen = document.getElementById('menuScreen');
 export const gameCanvas = document.getElementById('gameCanvas');
 export const canvas = document.getElementById('gameCanvas');
-export const ctx = canvas.getContext('2d');
-export const BIG_BOSS_SPAWN_INTERVAL = 5; 
+export const ctx = canvas.getContext('2d'); 
+export const BIG_BOSS_SPAWN_INTERVAL = 5;
 export const STAGE_ONE_BOSS_SPAWN_INTERVAL = 500;
 export const INITIAL_ENEMY_SPAWN_CHANCE = 0.02;
 export const POWERUP_DURATION = 20000; // 20 seconds
 export const POWERUP_FLASH_DURATION = 5000;
 export const MAX_ENEMIES = 15;
 export const MOBILE_SPEED_MULTIPLIER = .5;
+export const keys = {};
 
 export const player = {
     x: canvas.width / 2,
@@ -54,6 +55,7 @@ export const ColorScheme = {
     }
 };
 
+export let lastFireTime = 0;
 export let bigBoss = null;
 export let aimAngle = 0;
 export let bullets = [];
@@ -83,7 +85,6 @@ export let pausedPowerups = [];
 export let powerupsPausedTime = 0;
 export let lastMousePosition = { x: 0, y: 0 };
 export let currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
-export let lastFireTime = 0;
 export let stageOneBossesDefeated = 0;
 export let stageOneBossesDestroyed = 0;
 
@@ -468,41 +469,33 @@ window.addEventListener('load', () => {
 
 export function startGame() {
     console.log("Starting game...");
-    showNamePrompt()
-        .then(name => {
-            if (name) {
-                player.name = name;
-                resetGame();
-                isGameRunning = true;
-                isPaused = false;
-                if (animationFrameId) {
-                    cancelAnimationFrame(animationFrameId);
-                }
-                if (isMobile()) {
-                    createMobileControls();
-                    setupMobileControls();
-                    resizeCanvasForMobile();
-                    
-                    // Adjust the position of mobile controls
-                    const mobileControls = document.getElementById('mobileControls');
-                    if (mobileControls) {
-                        mobileControls.style.position = 'fixed';
-                        mobileControls.style.bottom = '0';
-                        mobileControls.style.left = '0';
-                        mobileControls.style.width = '100%';
-                        mobileControls.style.height = '34vh';
-                    }
-                }
-                loadSettings(); // Move this after creating mobile controls
-                animationFrameId = requestAnimationFrame(gameLoop);
-            } else {
-                showMenu();
+    if (player.name) {
+        resetGame();
+        isGameRunning = true;
+        isPaused = false;
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+        }
+        if (isMobile()) {
+            createMobileControls();
+            setupMobileControls();
+            resizeCanvasForMobile();
+            
+            // Adjust the position of mobile controls
+            const mobileControls = document.getElementById('mobileControls');
+            if (mobileControls) {
+                mobileControls.style.position = 'fixed';
+                mobileControls.style.bottom = '0';
+                mobileControls.style.left = '0';
+                mobileControls.style.width = '100%';
+                mobileControls.style.height = '34vh';
             }
-        })
-        .catch(error => {
-            console.error("Error starting new game:", error);
-            showMenu();
-        });
+        }
+        loadSettings(); // Move this after creating mobile controls
+        animationFrameId = requestAnimationFrame(gameLoop);
+    } else {
+        startNewGame();
+    }
     hideMenu();
 }
 

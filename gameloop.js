@@ -10,7 +10,7 @@ import {
     checkStageOneBossCollisions,
     spawnStageOneBoss,
     destroyStageOneBoss,
-    drawBigBoss,  // Make sure this is imported
+    drawBigBoss,
     moveBigBoss,
     checkBigBossSpawn,
     resetAfterBigBoss
@@ -28,10 +28,11 @@ import {
 // Import functions from globals.js
 import {
     updateColors,
+    fireInterval,
     updatePlayerAngle,
     movePlayer,
     moveBullets,
-    moveParticles,
+    lastMousePosition,
     checkCollisions,
     checkPowerupCollisions,
     updatePowerup,
@@ -48,8 +49,20 @@ import {
     drawBossCounters,
     createGoldenExplosion,
     updateTopPlayers,
-    loseLife,
-    gameOver
+    updateCustomCursor,
+    canvas,
+    ctx,
+    bigBoss,
+    score,
+    lives,
+    ColorScheme,
+    player,
+    enemies,
+    stageOneBosses,
+    bigBossesDestroyed,
+    isGameRunning,
+    isPaused,
+    lastFireTime,
 } from './JS/globals.js';
 
 export function gameLoop(currentTime) {
@@ -62,16 +75,30 @@ export function gameLoop(currentTime) {
     if (!isPaused) {
         updateColors();
         updatePlayerAngle(lastMousePosition.x, lastMousePosition.y);
-        //console.log("Game is not paused, executing game logic");
         try {
-            //console.log("Clearing canvas");
             ctx.fillStyle = ColorScheme.getBackgroundColor();
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             updateCustomCursor(lastMousePosition);    
-            //console.log("Moving game objects");
-            if (typeof movePlayer === 'function') movePlayer(currentTime);
-            if (typeof moveBullets === 'function') moveBullets();
-            if (typeof moveEnemies === 'function') moveEnemies();
+
+            // Wrap each operation in a try-catch block to identify the problematic line
+            try {
+                if (typeof movePlayer === 'function') movePlayer(currentTime);
+            } catch (error) {
+                console.error("Error in movePlayer:", error);
+            }
+
+            try {
+                if (typeof moveBullets === 'function') moveBullets();
+            } catch (error) {
+                console.error("Error in moveBullets:", error);
+            }
+
+            try {
+                if (typeof moveEnemies === 'function') moveEnemies();
+            } catch (error) {
+                console.error("Error in moveEnemies:", error);
+            }
+
             if (typeof moveStageOneBosses === 'function') moveStageOneBosses();
             if (typeof moveParticles === 'function') moveParticles();
             if (typeof moveBigBoss === 'function') moveBigBoss();
@@ -113,8 +140,12 @@ export function gameLoop(currentTime) {
 
             if (bigBoss) {
                 //console.log("Updating big boss");
-                moveBigBoss();
-                drawBigBoss();
+                try {
+                    moveBigBoss();
+                    drawBigBoss();
+                } catch (error) {
+                    console.error("Error in bigBoss operations:", error);
+                }
 
                 if (bigBoss.health <= 0 && !bigBoss.defeated) {
                     bigBoss.defeated = true;
@@ -123,34 +154,42 @@ export function gameLoop(currentTime) {
                 }
 
                 if (bigBoss.defeated) {
-                    if (bigBoss.shakeTime > 0) {
-                        bigBoss.shakeTime--;
-                        ctx.save();
-                        ctx.translate(Math.random() * 10 - 5, Math.random() * 10 - 5);
-                        drawBigBoss();
-                        ctx.restore();
-                    } else {
-                        createGoldenExplosion(bigBoss.x, bigBoss.y);
-                        lives += 3;
-                        score += 3000;
-                        bigBossesDestroyed++; // Add this line to increment the counter
-                        updateTopPlayers();
-                        bigBoss = null;
-                        resetAfterBigBoss();
-                        //console.log("Big boss exploded and removed. Total big bosses destroyed:", bigBossesDestroyed);
+                    try {
+                        if (bigBoss.shakeTime > 0) {
+                            bigBoss.shakeTime--;
+                            ctx.save();
+                            ctx.translate(Math.random() * 10 - 5, Math.random() * 10 - 5);
+                            drawBigBoss();
+                            ctx.restore();
+                        } else {
+                            createGoldenExplosion(bigBoss.x, bigBoss.y);
+                            lives += 3;
+                            score += 3000;
+                            bigBossesDestroyed++; // This line (167) is likely causing the error
+                            updateTopPlayers();
+                            bigBoss = null;
+                            resetAfterBigBoss();
+                            //console.log("Big boss exploded and removed. Total big bosses destroyed:", bigBossesDestroyed);
+                        }
+                    } catch (error) {
+                        console.error("Error in bigBoss defeat handling:", error);
                     }
                 }
             }
 
-            if (score > 0 && score % 10 === 0) {
-                updateTopPlayers();
+            try {
+                if (score > 0 && score % 10 === 0) {
+                    updateTopPlayers();
+                }
+                updateTopPlayers();    
+                drawTopPlayers();
+            } catch (error) {
+                console.error("Error in updateTopPlayers or drawTopPlayers:", error);
             }
 
-            updateTopPlayers();    
-            drawTopPlayers();
-
         } catch (error) {
-            console.error("Error in game loop:", error);
+            console.error("Detailed error in game loop:", error);
+            console.error("Error stack:", error.stack);
             isGameRunning = false;
         }
     } else {

@@ -1,4 +1,4 @@
-import { setStageOneBossesDefeated, bigBossesDestroyed } from './globals.js';
+import { enemies, MAX_ENEMIES, canvas, ColorScheme, bigBoss, currentEnemySpawnChance, stageOneBosses, score, } from './globals.js';
 
 //--------------------------------------- Enemies Logic ----------------------------------------
 
