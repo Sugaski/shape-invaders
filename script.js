@@ -3,55 +3,126 @@ const ctx = canvas.getContext('2d');
 
 function resizeCanvas() {
     if (isMobile()) {
-        resizeCanvasForMobile();
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
     } else {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
     }
-    console.log("Canvas resized to:", canvas.width, "x", canvas.height);
+    updateGameElementsSize();
 }
 
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
+function updateGameElementsSize() {
+    const scaleFactor = isMobile() ? MOBILE_SCALE_FACTOR : 1;
+    player.size = 35 * scaleFactor;
+    player.speed = 200 * scaleFactor;
+    
+    // Adjust player position for mobile view
+    if (isMobile()) {
+        player.x = Math.min(Math.max(player.x, player.size / 2), canvas.width - player.size / 2);
+        player.y = Math.min(Math.max(player.y, player.size / 2), canvas.height - player.size / 2);
+    }
+    
+    enemies.forEach(enemy => {
+        enemy.size *= scaleFactor;
+    });
+    
+    stageOneBosses.forEach(boss => {
+        boss.size *= scaleFactor;
+    });
+    
+    if (bigBoss) {
+        bigBoss.size *= scaleFactor;
+        bigBoss.orbitRadius *= scaleFactor;
+    }
+    
+    bullets.forEach(bullet => {
+        bullet.size *= scaleFactor;
+    });
+    
+    powerups.forEach(powerup => {
+        powerup.size *= scaleFactor;
+    });
+}
+
+function adjustGameElementsPositions() {
+    // Adjust player position
+    player.x = Math.min(Math.max(player.x, player.size / 2), canvas.width - player.size / 2);
+    player.y = Math.min(Math.max(player.y, player.size / 2), canvas.height - player.size / 2);
+
+    // Adjust enemies positions
+    enemies.forEach(enemy => {
+        enemy.x = Math.min(Math.max(enemy.x, enemy.size / 2), canvas.width - enemy.size / 2);
+        enemy.y = Math.min(Math.max(enemy.y, enemy.size / 2), canvas.height - enemy.size / 2);
+    });
+
+    // Adjust stage one bosses positions
+    stageOneBosses.forEach(boss => {
+        boss.x = Math.min(Math.max(boss.x, boss.size / 2), canvas.width - boss.size / 2);
+        boss.y = Math.min(Math.max(boss.y, boss.size / 2), canvas.height - boss.size / 2);
+    });
+
+    // Adjust big boss position if it exists
+    if (bigBoss) {
+        bigBoss.x = Math.min(Math.max(bigBoss.x, bigBoss.size / 2), canvas.width - bigBoss.size / 2);
+        bigBoss.y = Math.min(Math.max(bigBoss.y, bigBoss.size / 2), canvas.height - bigBoss.size / 2);
+    }
+
+    // Adjust powerups positions
+    powerups.forEach(powerup => {
+        powerup.x = Math.min(Math.max(powerup.x, powerup.size / 2), canvas.width - powerup.size / 2);
+        powerup.y = Math.min(Math.max(powerup.y, powerup.size / 2), canvas.height - powerup.size / 2);
+    });
+}
+
+window.addEventListener('resize', () => {
+    resizeCanvas();
+    if (isGameRunning) {
+        // Adjust game elements positions if needed
+        adjustGameElementsPositions();
+    }
+});
 
 function isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-function resizeCanvasForMobile() {
-    if (isMobile()) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight * 0.66; // 66% of screen height
-        // Adjust game elements based on new canvas size if needed
+function initializeMobileControls() {
+    const mobileEscapeButton = document.getElementById('mobileEscapeButton');
+    
+    if (mobileEscapeButton) {
+        mobileEscapeButton.addEventListener('click', () => {
+            if (isGameRunning) {
+                togglePause();
+            } else if (document.getElementById('settingsMenu').style.display === 'block') {
+                closeSettings();
+            }
+        });
     }
 }
 
 function createMobileControls() {
-    const mobileControls = document.createElement('div');
-    mobileControls.id = 'mobileControls';
-    document.body.appendChild(mobileControls);
+    const mobileControls = document.getElementById('mobileControls');
+    mobileControls.style.display = 'flex';
 
-    const moveStick = document.createElement('div');
-    moveStick.id = 'moveStick';
-    mobileControls.appendChild(moveStick);
+    const moveStick = document.getElementById('moveStick');
+    const aimStick = document.getElementById('aimStick');
 
-    const moveStickKnob = document.createElement('div');
-    moveStickKnob.id = 'moveStickKnob';
-    moveStick.appendChild(moveStickKnob);
+    moveStick.addEventListener('touchstart', handleMoveStickStart, { passive: false });
+    moveStick.addEventListener('touchmove', handleMoveStickMove, { passive: false });
+    moveStick.addEventListener('touchend', handleMoveStickEnd, { passive: false });
+
+    aimStick.addEventListener('touchstart', handleAimStickStart, { passive: false });
+    aimStick.addEventListener('touchmove', handleAimStickMove, { passive: false });
+    aimStick.addEventListener('touchend', handleAimStickEnd, { passive: false });
 
     updateMobileControlsColor();
 }
 
-function setupMobileControls() {
-    const moveStick = document.getElementById('moveStick');
 
-    moveStick.addEventListener('touchstart', handleMoveStickTouch);
-    moveStick.addEventListener('touchmove', handleMoveStickMove);
-    moveStick.addEventListener('touchend', handleMoveStickRelease);
-}
-
-function handleMoveStickTouch(e) {
+function handleMoveStickStart(e) {
     e.preventDefault();
+    handleMoveStickMove(e);
 }
 
 function handleMoveStickMove(e) {
@@ -66,24 +137,37 @@ function handleMoveStickMove(e) {
     
     player.dx = Math.cos(angle) * speed;
     player.dy = Math.sin(angle) * speed;
-    player.angle = angle; // Update the angle for mobile mode
 
-    console.log('Joystick update:', { 
-        angle, 
-        distance, 
-        speed, 
-        dx: player.dx, 
-        dy: player.dy,
-        playerAngle: player.angle
-    });
+    console.log('Move joystick update:', { angle, distance, speed, dx: player.dx, dy: player.dy });
 }
 
-function handleMoveStickRelease() {
+function handleMoveStickEnd() {
     const stickKnob = document.getElementById('moveStickKnob');
     stickKnob.style.transform = 'translate(0, 0)';
     player.dx = 0;
     player.dy = 0;
-    console.log('Joystick released, player velocity reset');
+    console.log('Move joystick released, player velocity reset');
+}
+
+function handleAimStickStart(e) {
+    e.preventDefault();
+    handleAimStickMove(e);
+}
+
+function handleAimStickMove(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const stick = document.getElementById('aimStick');
+    const stickKnob = document.getElementById('aimStickKnob');
+    const { angle } = updateStickPosition(touch, stick, stickKnob);
+    
+    player.angle = angle;
+    console.log('Aim joystick update:', { angle: player.angle });
+}
+
+function handleAimStickEnd() {
+    const stickKnob = document.getElementById('aimStickKnob');
+    stickKnob.style.transform = 'translate(0, 0)';
 }
 
 function updateStickPosition(touch, stick, stickKnob) {
@@ -104,22 +188,44 @@ function updateStickPosition(touch, stick, stickKnob) {
     return { angle, distance };
 }
 
-function updatePlayerMovement() {
-    const moveStick = document.getElementById('moveStick');
-    const moveStickKnob = document.getElementById('moveStickKnob');
-    const { angle, distance } = updateStickPosition(event.touches[0], moveStick, moveStickKnob);
-    
-    const speed = (distance / (moveStick.offsetWidth / 2)) * player.speed;
-    player.dx = Math.cos(angle) * speed;
-    player.dy = Math.sin(angle) * speed;
+function updateMobileControlsColor() {
+    if (isMobile()) {
+        const textColor = ColorScheme.getTextColor();
+        const backgroundColor = ColorScheme.getBackgroundColor();
+        const moveStick = document.getElementById('moveStick');
+        const aimStick = document.getElementById('aimStick');
+        const moveStickKnob = document.getElementById('moveStickKnob');
+        const aimStickKnob = document.getElementById('aimStickKnob');
+        const mobileEscapeButton = document.getElementById('mobileEscapeButton');
+
+        if (moveStick && aimStick && moveStickKnob && aimStickKnob && mobileEscapeButton) {
+            moveStick.style.borderColor = textColor;
+            aimStick.style.borderColor = textColor;
+            moveStickKnob.style.backgroundColor = textColor;
+            aimStickKnob.style.backgroundColor = textColor;
+            mobileEscapeButton.style.borderColor = textColor;
+            mobileEscapeButton.style.color = textColor;
+            mobileEscapeButton.style.backgroundColor = backgroundColor;
+        }
+    }
 }
 
-function updatePlayerAim() {
-    const aimStick = document.getElementById('aimStick');
-    const aimStickKnob = document.getElementById('aimStickKnob');
-    const { angle } = updateStickPosition(event.touches[0], aimStick, aimStickKnob);
-    
-    player.angle = angle;
+function showMobileControls() {
+    if (isMobile()) {
+        const mobileControls = document.getElementById('mobileControls');
+        if (mobileControls) {
+            mobileControls.style.display = 'flex';
+        }
+    }
+}
+
+function hideMobileControls() {
+    if (isMobile()) {
+        const mobileControls = document.getElementById('mobileControls');
+        if (mobileControls) {
+            mobileControls.style.display = 'none';
+        }
+    }
 }
 
 let lastMousePosition = { x: 0, y: 0 };
@@ -133,7 +239,8 @@ let currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
 const POWERUP_DURATION = 20000; // 20 seconds
 const POWERUP_FLASH_DURATION = 5000;
 const MAX_ENEMIES = 15;
-const MOBILE_SPEED_MULTIPLIER = .5;
+const MOBILE_SPEED_MULTIPLIER = 1;
+const MOBILE_SCALE_FACTOR = 0.6;
 const player = {
     x: canvas.width / 2,
     y: canvas.height / 2,
@@ -165,6 +272,8 @@ let topPlayers = [];
 let highScoreName = localStorage.getItem('highScoreName') || '';
 let gameState = 'menu';
 let isPaused = false;
+let lastFireTime = 0;
+const fireInterval = 200;
 
 const ColorScheme = {
     dark: {
@@ -258,6 +367,7 @@ function showMenu() {
     gameState = 'menu';
     menuScreen.style.display = 'block';
     gameCanvas.style.display = 'none';
+    hideMobileControls();
     //console.log("Menu shown. isPaused:", isPaused);
 }
 
@@ -412,6 +522,7 @@ function showSettings() {
     document.getElementById('settingsMenu').style.display = 'block';
     document.getElementById('menuScreen').style.display = 'none';
     document.getElementById('gameCanvas').style.display = 'none';
+    hideMobileControls();
 }
 
 function closeSettings() {
@@ -591,7 +702,10 @@ document.getElementById('colorblindMode').addEventListener('change', function() 
 });
 
 window.addEventListener('load', () => {
-    //console.log("Window load event triggered");
+    if (isMobile()) {
+        createMobileControls();
+        initializeMobileControls();
+    }
     initializeMenu();
     loadSettings();
     showMenu();
@@ -606,6 +720,7 @@ function startNewGame() {
             if (name) {
                 player.name = name;
                 resetGame();
+                resizeCanvas();
                 startGame();
             } else {
                 showMenu();
@@ -621,30 +736,19 @@ function startGame() {
     console.log("Starting game...");
     hideMenu();
     resetGame();
+    resizeCanvas();
     isGameRunning = true;
     isPaused = false;
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
     }
     if (isMobile()) {
-        createMobileControls();
-        setupMobileControls();
-        resizeCanvasForMobile();
-        
-        // Adjust the position of mobile controls
-        const mobileControls = document.getElementById('mobileControls');
-        if (mobileControls) {
-            mobileControls.style.position = 'fixed';
-            mobileControls.style.bottom = '0';
-            mobileControls.style.left = '0';
-            mobileControls.style.width = '100%';
-            mobileControls.style.height = '34vh';
-        }
+        showMobileControls();
     }
-    loadSettings(); // Move this after creating mobile controls
+    loadSettings();
+    updateMobileControlsColor();
     animationFrameId = requestAnimationFrame(gameLoop);
 }
-
 function resetGame() {
     //console.log("Resetting game...");
     player.x = canvas.width / 2;
@@ -735,10 +839,12 @@ function spawnStageOneBoss() {
         const angle = Math.atan2(centerY - y, centerX - x);
         const speed = 2 + Math.random() * 2; // Random speed between 2 and 4
 
+        const baseSize = 60;
+        const size = isMobile() ? baseSize * MOBILE_SCALE_FACTOR : baseSize;
         stageOneBosses.push({
             x: x,
             y: y,
-            size: 60,
+            size: size,
             health: 3,
             dx: Math.cos(angle) * speed,
             dy: Math.sin(angle) * speed,
@@ -1170,8 +1276,19 @@ function movePlayer(currentTime) {
     const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
     lastTime = currentTime;
 
-    player.x += player.dx * deltaTime;
-    player.y += player.dy * deltaTime;
+    if (isMobile()) {
+        // Use joystick input for mobile
+        player.x += player.dx * deltaTime;
+        player.y += player.dy * deltaTime;
+    } else {
+        // Use keyboard input for desktop
+        if (keys.ArrowLeft || keys.a) player.x -= player.speed * deltaTime;
+        if (keys.ArrowRight || keys.d) player.x += player.speed * deltaTime;
+        if (keys.ArrowUp || keys.w) player.y -= player.speed * deltaTime;
+        if (keys.ArrowDown || keys.s) player.y += player.speed * deltaTime;
+    }
+
+    // Ensure player stays within canvas boundaries
     player.x = Math.max(player.size / 2, Math.min(canvas.width - player.size / 2, player.x));
     player.y = Math.max(player.size / 2, Math.min(canvas.height - player.size / 2, player.y));
 
@@ -1180,7 +1297,7 @@ function movePlayer(currentTime) {
         y: player.y, 
         dx: player.dx, 
         dy: player.dy,
-        angle: player.angle // Log the angle to verify it's not changing
+        angle: player.angle
     });
 }
 
@@ -1237,10 +1354,12 @@ function spawnEnemy() {
         const y = Math.random() * canvas.height;
         const angle = Math.random() * Math.PI * 2;
         const speed = 1 + Math.random() * 2;
+        const baseSize = 25;
+        const size = isMobile() ? baseSize * MOBILE_SCALE_FACTOR : baseSize;
         enemies.push({
             x: x,
             y: y,
-            size: 25,
+            size: size,
             sides: Math.floor(Math.random() * 3) + 3,
             dx: Math.cos(angle) * speed,
             dy: Math.sin(angle) * speed,
@@ -1554,9 +1673,6 @@ function checkExtraLife() {
     }
 }
 
-let lastFireTime = 0;
-const fireInterval = 200;
-
 function gameLoop(currentTime) {
     if (!isGameRunning || isPaused) {
         cancelAnimationFrame(animationFrameId);
@@ -1779,6 +1895,8 @@ function resumePowerups() {
 function spawnBigBoss() {
     //console.log("spawnBigBoss function called. stageOneBossesDefeated:", stageOneBossesDefeated);
     if (!bigBoss && stageOneBossesDefeated >= 5) {
+        const baseSize = 200;
+        const size = isMobile() ? baseSize * MOBILE_SCALE_FACTOR : baseSize;
         bigBoss = {
             x: canvas.width / 2,
             y: canvas.height / 2,
@@ -1854,10 +1972,12 @@ function moveBigBoss() {
 
 function launchBigBossProjectile() {
     const angle = Math.atan2(player.y - bigBoss.y, player.x - bigBoss.x);
+    const baseSize = 30;
+    const size = isMobile() ? baseSize * MOBILE_SCALE_FACTOR : baseSize;
     bigBoss.projectiles.push({
         x: bigBoss.x,
         y: bigBoss.y,
-        size: 30,
+        size: size,
         angle: angle,
         speed: 2, // Increased speed from 1 to 2
         health: 5,
@@ -2036,14 +2156,6 @@ function handleGameOverTouch(e) {
 function handleGameOverKeyPress(e) {
     if (e.code === 'Space') {
         e.preventDefault();
-        window.removeEventListener('keydown', handleGameOverKeyPress);
-        startNewGame();
-    }
-}
-
-function handleGameOverKeyPress(e) {
-    if (e.code === 'Space') {
-        e.preventDefault(); 
         window.removeEventListener('keydown', handleGameOverKeyPress);
         startNewGame();
     }

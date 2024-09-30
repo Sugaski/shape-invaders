@@ -390,23 +390,24 @@ body.colorblind-mode #settingsMenu button:hover {
         justify-content: space-between;
         align-items: center;
         padding: 10px;
-        background-color: transparent;
+        background-color: rgba(0, 0, 0, 0.3); /* Add a slight background for visibility */
+        z-index: 1000; /* Ensure it's above the canvas */
     }
 
-    #moveStick {
+    #moveStick, #aimStick {
         position: relative;
-        width: 40%;
+        width: 35%;
         height: 90%;
-        border: 2px solid rgba(255, 255, 255, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.5); /* Increase opacity for visibility */
         border-radius: 50%;
-        background-color: transparent;
+        background-color: rgba(255, 255, 255, 0.1); /* Add a slight background */
     }
 
-    #moveStickKnob {
+    #moveStickKnob, #aimStickKnob {
         position: absolute;
         width: 30px;
         height: 30px;
-        background-color: rgba(255, 255, 255, 0.3);
+        background-color: rgba(255, 255, 255, 0.5); /* Increase opacity for visibility */
         border-radius: 50%;
         top: 50%;
         left: 50%;
@@ -414,24 +415,25 @@ body.colorblind-mode #settingsMenu button:hover {
         transition: transform 0.1s ease-out;
     }
 
-    #aimStick {
-        position: relative;
-        width: 40%;
-        height: 90%;
-        border: 2px solid rgba(255, 255, 255, 0.3);
+    #mobileEscapeButton {
+        width: 60px;
+        height: 60px;
+        font-size: 12px;
+        padding: 5px;
         border-radius: 50%;
-        background-color: transparent;
+        background-color: rgba(255, 255, 255, 0.3); /* Increase opacity for visibility */
+        color: #fff;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 1001; /* Ensure it's above other mobile controls */
     }
 
-    #aimStickKnob {
-        position: absolute;
-        width: 30px;
-        height: 30px;
-        background-color: rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        transition: transform 0.1s ease-out;
+    #mobileEscapeButton:active {
+        background-color: rgba(255, 255, 255, 0.5);
+        transform: scale(0.95);
     }
 }
