@@ -95,7 +95,7 @@ function initializeMobileControls() {
             if (isGameRunning) {
                 togglePause();
             } else if (document.getElementById('settingsMenu').style.display === 'block') {
-                closeSettings();
+                hideSettings();
             }
         });
     }
@@ -305,7 +305,7 @@ const ColorScheme = {
 };
 
 function updateCustomCursor(position) {
-    if (!isGameRunning || isPaused) return;
+    if (!isGameRunning || isPaused || isMobile()) return;
 
     ctx.save();
     
@@ -383,6 +383,9 @@ function initializeMenu() {
     document.getElementById('continue').addEventListener('click', () => {
         if (isGameRunning && isPaused) {
             resumeGame();
+            if (isMobile()) {
+                showMobileControls();
+            }
         }
     });
 
@@ -525,28 +528,25 @@ function showSettings() {
     hideMobileControls();
 }
 
-function closeSettings() {
-    document.getElementById('settingsMenu').style.display = 'none';
-    if (isGameRunning) {
-        resumeGame();
-    } else {
-        showMenu();
+function hideSettings() {
+    const settingsMenu = document.getElementById('settingsMenu');
+    if (settingsMenu) {
+        settingsMenu.style.display = 'none';
     }
 }
 
 function resumeGame() {
-    //console.log("Resuming game...");
+    console.log("Resuming game...");
     isPaused = false;
     hideMenu();
     hideSettings();
+    if (isMobile()) {
+        showMobileControls();
+    }
     if (!animationFrameId) {
         animationFrameId = requestAnimationFrame(gameLoop);
     }
-    //console.log("Game resumed. isPaused:", isPaused);
-}
-
-function hideSettings() {
-    document.getElementById('settingsMenu').style.display = 'none';
+    console.log("Game resumed. isPaused:", isPaused);
 }
 
 function updateMobileControlsColor() {
@@ -1801,7 +1801,7 @@ window.addEventListener('keydown', e => {
         if (isGameRunning) {
             togglePause();
         } else if (document.getElementById('settingsMenu').style.display === 'block') {
-            closeSettings();
+            hideSettings();
         }
     }
     
