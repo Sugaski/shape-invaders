@@ -143,8 +143,10 @@ function handleStickMove(e, stickType) {
     
     if (stickType === 'move') {
         moveStickAngle = angle;
+        moveStickDistance = distance / (rect.width / 2);
     } else {
         aimStickAngle = angle;
+        aimStickDistance = distance / (rect.width / 2);
         player.angle = angle;
     }
 }
@@ -155,8 +157,7 @@ function handleStickEnd(stickType) {
     
     if (stickType === 'move') {
         moveStickActive = false;
-        player.dx = 0;
-        player.dy = 0;
+        moveStickDistance = 0;
     } else {
         aimStickActive = false;
     }
@@ -404,7 +405,7 @@ let aimStickActive = false;
 let moveStickAngle = 0;
 let moveStickDistance = 0;
 let aimStickAngle = 0;
-let moveStickStartX, moveStickStartY, aimStickStartX, aimStickStartY;
+let aimStickDistance = 0;
 let aimAngle = 0;
 let bullets = [];
 let enemies = [];
@@ -1483,19 +1484,26 @@ function movePlayer(currentTime) {
 
     if (isMobile()) {
         if (moveStickActive) {
-            const speed = player.speed * speedMultiplier;
+            const speed = player.speed * speedMultiplier * moveStickDistance;
             player.dx = Math.cos(moveStickAngle) * speed;
             player.dy = Math.sin(moveStickAngle) * speed;
+        } else {
+            player.dx = 0;
+            player.dy = 0;
         }
-        player.x += player.dx * deltaTime;
-        player.y += player.dy * deltaTime;
     } else {
         // Desktop controls remain unchanged
-        if (keys.ArrowLeft || keys.a) player.x -= player.speed * deltaTime * speedMultiplier;
-        if (keys.ArrowRight || keys.d) player.x += player.speed * deltaTime * speedMultiplier;
-        if (keys.ArrowUp || keys.w) player.y -= player.speed * deltaTime * speedMultiplier;
-        if (keys.ArrowDown || keys.s) player.y += player.speed * deltaTime * speedMultiplier;
+        if (keys.ArrowLeft || keys.a) player.dx = -player.speed * speedMultiplier;
+        else if (keys.ArrowRight || keys.d) player.dx = player.speed * speedMultiplier;
+        else player.dx = 0;
+
+        if (keys.ArrowUp || keys.w) player.dy = -player.speed * speedMultiplier;
+        else if (keys.ArrowDown || keys.s) player.dy = player.speed * speedMultiplier;
+        else player.dy = 0;
     }
+
+    player.x += player.dx * deltaTime;
+    player.y += player.dy * deltaTime;
 
     // Ensure player stays within canvas boundaries
     player.x = Math.max(player.size / 2, Math.min(canvas.width - player.size / 2, player.x));
@@ -1890,8 +1898,13 @@ function gameLoop(currentTime) {
         return;
     }
 
-    if (isMobile() && aimStickActive) {
-        player.angle = aimStickAngle;
+    if (isMobile()) {
+        if (aimStickActive) {
+            player.angle = aimStickAngle;
+        }
+        if (aimStickActive && aimStickDistance > 0.5) {
+            fireBullet();
+        }
     }
 
     if (!isPaused) {
