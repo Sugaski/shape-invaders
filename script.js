@@ -2255,17 +2255,10 @@ function drawFullTopPlayersList() {
 function getPlayerRank() {
     const playerScore = score;
     const playerName = player.name;
-    
-    // Create a copy of topPlayers and add the current player
     const allPlayers = [...topPlayers, { name: playerName, score: playerScore }];
-    
-    // Sort all players by score in descending order
     allPlayers.sort((a, b) => b.score - a.score);
-    
-    // Find the rank of the current player
     const rank = allPlayers.findIndex(p => p.name === playerName && p.score === playerScore) + 1;
-    
-    return rank <= 5 ? rank : 0; // Return 0 if not in top 5
+    return rank <= 5 ? rank : 0;
 }
 
 function initializeTopPlayers() {
