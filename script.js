@@ -14,8 +14,8 @@ function resizeCanvas() {
 
 function updateGameElementsSize() {
     const scaleFactor = isMobile() ? MOBILE_SCALE_FACTOR : 1;
-    player.size = 35 * scaleFactor;
-    player.speed = 200 * scaleFactor;
+    player.size = 45 * scaleFactor;
+    player.speed = 300 * scaleFactor;
     
     // Adjust player position for mobile view
     if (isMobile()) {
@@ -320,6 +320,7 @@ const INITIAL_ENEMY_SPAWN_CHANCE = 0.02;
 let currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
 const POWERUP_DURATION = 20000; // 20 seconds
 const POWERUP_FLASH_DURATION = 5000;
+const BARRIER_SPEED_MULTIPLIER = 2;
 const MAX_ENEMIES = 15;
 const MOBILE_SPEED_MULTIPLIER = 1;
 const MOBILE_SCALE_FACTOR = 0.6;
@@ -388,7 +389,16 @@ const ColorScheme = {
     getRandomColor: function() {
         const currentColors = this[this.current].colors;
         return currentColors[Math.floor(Math.random() * currentColors.length)];
+    },
+    getPlayerColor: function() {  
+        return this.getTextColor();
     }
+};
+
+ColorScheme.getBarrierColor = function() {
+    return this.currentMode === 'dark' ? '#00FFFF' : 
+           this.currentMode === 'light' ? '#FF00FF' : 
+           '#FFD700'; // Gold color for colorblind mode
 };
 
 function updateCustomCursor(position) {
@@ -1016,7 +1026,7 @@ function destroyStageOneBoss(index) {
 }
 
 function spawnPowerup(x, y) {
-    const powerupType = Math.floor(Math.random() * 3) + 1;
+    const powerupType = Math.floor(Math.random() * 4) + 1;
     powerups.push({
         x,
         y,
@@ -1095,13 +1105,50 @@ function activatePowerup(type) {
     powerupEndTime = Date.now() + POWERUP_DURATION;
     if (type === 3) {
         //console.log("Honing Missiles powerup activated");
+    } else if (type === 4) {
+        //console.log("Barrier powerup activated");
+        player.hasBarrier = true;
     }
 }
 
 function updatePowerup() {
-    if (!bigBoss && currentPowerup && Date.now() > powerupEndTime) {
-        currentPowerup = null;
+    if (!bigBoss && currentPowerup) {
+        const currentTime = Date.now();
+        if (currentTime > powerupEndTime) {
+            if (currentPowerup === 4) {
+                player.hasBarrier = false;
+            }
+            currentPowerup = null;
+        }
     }
+}
+
+function chainReaction(x, y) {
+    const radius = 100;
+    enemies.forEach((enemy, index) => {
+        const dx = enemy.x - x;
+        const dy = enemy.y - y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < radius) {
+            createExplosion(enemy.x, enemy.y);
+            enemies.splice(index, 1);
+            score += 10;
+            updateHighScore();
+            checkExtraLife();
+            chainReaction(enemy.x, enemy.y);
+        }
+    });
+
+    stageOneBosses.forEach((boss, index) => {
+        const dx = boss.x - x;
+        const dy = boss.y - y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < radius) {
+            createExplosion(boss.x, boss.y);
+            destroyStageOneBoss(index);
+            chainReaction(boss.x, boss.y);
+        }
+    });
 }
 
 function fireBullet() {
@@ -1224,26 +1271,50 @@ function drawBullets() {
 }
 
 function drawPlayer() {
-    if (!playerInvulnerable || Math.floor(Date.now() / 100) % 2 === 0) {
-        ctx.save();
-        ctx.translate(player.x, player.y);
-        ctx.rotate(player.angle);
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    ctx.rotate(player.angle);
+    ctx.beginPath();
+    ctx.moveTo(player.size / 2, 0); // Tip of the triangle
+    ctx.lineTo(-player.size / 2, -player.size / 2); // Bottom left corner
+    ctx.lineTo(-player.size / 2, player.size / 2); // Bottom right corner
+    ctx.closePath();
+    ctx.fillStyle = ColorScheme.getPlayerColor();
+    ctx.fill();
 
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = ColorScheme.getTextColor();
-        
-        ctx.fillStyle = ColorScheme.getTextColor();
-        ctx.beginPath();
-        ctx.moveTo(player.size / 2, 0);  // Tip of the triangle
-        ctx.lineTo(-player.size / 2, -player.size / 2);
-        ctx.lineTo(-player.size / 2, player.size / 2);
-        ctx.closePath();
-        ctx.fill();
+    // Add an outline to the player
+    ctx.strokeStyle = ColorScheme.getTextColor();
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
-        ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // Draw barrier if active
+    if (player.hasBarrier) {
+        const currentTime = Date.now();
+        const timeLeft = powerupEndTime - currentTime;
         
-        ctx.restore();
+        if (timeLeft <= POWERUP_FLASH_DURATION) {
+            // Flash the barrier
+            if (Math.floor(timeLeft / 100) % 2 === 0) {
+                drawBarrier();
+            }
+        } else {
+            drawBarrier();
+        }
     }
+
+    // Add glow effect
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = ColorScheme.getTextColor();
+}
+
+function drawBarrier() {
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.size * 1.5, 0, Math.PI * 2);
+    ctx.strokeStyle = ColorScheme.getBarrierColor();
+    ctx.lineWidth = 3;
+    ctx.stroke();
 }
 
 function drawPolygon(x, y, radius, sides, color) {
@@ -1332,16 +1403,19 @@ function movePlayer(currentTime) {
     const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
     lastTime = currentTime;
 
+    // Calculate the speed multiplier
+    const speedMultiplier = player.hasBarrier ? BARRIER_SPEED_MULTIPLIER : 1;
+
     if (isMobile()) {
         // Use joystick input for mobile
-        player.x += player.dx * deltaTime;
-        player.y += player.dy * deltaTime;
+        player.x += player.dx * deltaTime * speedMultiplier;
+        player.y += player.dy * deltaTime * speedMultiplier;
     } else {
         // Use keyboard input for desktop
-        if (keys.ArrowLeft || keys.a) player.x -= player.speed * deltaTime;
-        if (keys.ArrowRight || keys.d) player.x += player.speed * deltaTime;
-        if (keys.ArrowUp || keys.w) player.y -= player.speed * deltaTime;
-        if (keys.ArrowDown || keys.s) player.y += player.speed * deltaTime;
+        if (keys.ArrowLeft || keys.a) player.x -= player.speed * deltaTime * speedMultiplier;
+        if (keys.ArrowRight || keys.d) player.x += player.speed * deltaTime * speedMultiplier;
+        if (keys.ArrowUp || keys.w) player.y -= player.speed * deltaTime * speedMultiplier;
+        if (keys.ArrowDown || keys.s) player.y += player.speed * deltaTime * speedMultiplier;
     }
 
     // Ensure player stays within canvas boundaries
@@ -1353,7 +1427,9 @@ function movePlayer(currentTime) {
         y: player.y, 
         dx: player.dx, 
         dy: player.dy,
-        angle: player.angle
+        angle: player.angle,
+        hasBarrier: player.hasBarrier,
+        speed: player.speed * speedMultiplier
     });
 }
 
@@ -1516,13 +1592,19 @@ function checkCollisions() {
         // Check collisions with stage-one bosses
         for (let i = stageOneBosses.length - 1; i >= 0; i--) {
             const stageOneBoss = stageOneBosses[i];
-            if (!playerInvulnerable) {
-                const playerDx = stageOneBoss.x - player.x;
-                const playerDy = stageOneBoss.y - player.y;
-                const playerDistance = Math.sqrt(playerDx * playerDx + playerDy * playerDy);
-                if (playerDistance < stageOneBoss.size / 2 + player.size / 2) {
-                    loseLife();
+            const playerDx = stageOneBoss.x - player.x;
+            const playerDy = stageOneBoss.y - player.y;
+            const playerDistance = Math.sqrt(playerDx * playerDx + playerDy * playerDy);
+            
+            if (player.hasBarrier) {
+                const barrierRadius = player.size * 1.5;
+                if (playerDistance < barrierRadius + stageOneBoss.size / 2) {
+                    createExplosion(stageOneBoss.x, stageOneBoss.y);
+                    destroyStageOneBoss(i);
+                    chainReaction(stageOneBoss.x, stageOneBoss.y);
                 }
+            } else if (playerDistance < stageOneBoss.size / 2 + player.size / 2) {
+                loseLife();
             }
         }
     } catch (error) {
@@ -1585,20 +1667,32 @@ function checkCollisions() {
         }
     }
 
-    // Check collisions between player and enemies
-    for (let i = enemies.length - 1; i >= 0; i--) {
-        const enemy = enemies[i];
-        const dx = player.x - enemy.x;
-        const dy = player.y - enemy.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+   // Check collisions between player and enemies
+   for (let i = enemies.length - 1; i >= 0; i--) {
+    const enemy = enemies[i];
+    const dx = player.x - enemy.x;
+    const dy = player.y - enemy.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance < player.size / 2 + enemy.size / 2) {
-            loseLife();
+    if (player.hasBarrier) {
+        // Use the barrier radius for collision detection
+        const barrierRadius = player.size * 1.5;
+        if (distance < barrierRadius + enemy.size / 2) {
             createExplosion(enemy.x, enemy.y);
             enemies.splice(i, 1);
-            if (lives <= 0) return;
+            score += 10;
+            updateHighScore();
+            checkExtraLife();
+            chainReaction(enemy.x, enemy.y);
         }
+    } else if (distance < player.size / 2 + enemy.size / 2) {
+        loseLife();
+        createExplosion(enemy.x, enemy.y);
+        enemies.splice(i, 1);
+        if (lives <= 0) return;
     }
+}
+
 
     // Check collision between player and big boss
     if (bigBoss && !bigBoss.defeated) {
@@ -2233,6 +2327,7 @@ function resetGame() {
     player.angle = 0;
     player.dx = 0;
     player.dy = 0;
+    player.hasBarrier = false;
     bullets = [];
     enemies = [];
     particles = [];
