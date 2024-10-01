@@ -384,7 +384,7 @@ const MOBILE_SCALE_FACTOR = 0.8;
 const BIG_BOSS_SPAWN_INTERVAL = 5; 
 const STAGE_ONE_BOSS_SPAWN_INTERVAL = 50; // Spawn stage-one boss every 500 points
 const INITIAL_ENEMY_SPAWN_CHANCE = 0.02;
-let currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
+const fireInterval = 200;
 const POWERUP_DURATION = 20000; // 20 seconds
 const POWERUP_FLASH_DURATION = 5000;
 const BARRIER_SPEED_MULTIPLIER = 2;
@@ -392,45 +392,12 @@ const MAX_ENEMIES = 15;
 const player = {
     x: canvas.width / 2,
     y: canvas.height / 2,
-    size: 45,
+    size: 55,
     speed: 300,
     dx: 0,
     dy: 0,
     angle: 0
 };
-
-let lastMousePosition = { x: 0, y: 0 };
-let moveStickActive = false;
-let aimStickActive = false;
-let moveStickAngle = 0;
-let moveStickDistance = 0;
-let aimStickAngle = 0;
-let aimStickDistance = 0;
-let aimAngle = 0;
-let bullets = [];
-let enemies = [];
-let particles = [];
-let score = 0;
-let highScore = parseInt(localStorage.getItem('highScore')) || 0;
-let lives = 3;
-let lastExtraLife = 0;
-let playerInvulnerable = false;
-let playerBlinkInterval;
-let stageOneBosses = [];
-let powerups = [];
-let currentPowerup = null;
-let powerupEndTime = 0;
-let projectilesDestroyed = 0;
-let isGameRunning = false;
-let animationFrameId = null;
-let playerName = '';
-let topPlayers = [];
-let highScoreName = localStorage.getItem('highScoreName') || '';
-let gameState = 'menu';
-let isPaused = false;
-let lastFireTime = 0;
-const fireInterval = 200;
-
 const ColorScheme = {
     dark: {
         text: '#0f0',
@@ -462,6 +429,40 @@ const ColorScheme = {
         return this.getTextColor();
     }
 };
+
+let currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
+let lastMousePosition = { x: 0, y: 0 };
+let moveStickActive = false;
+let aimStickActive = false;
+let moveStickAngle = 0;
+let moveStickDistance = 0;
+let aimStickAngle = 0;
+let aimStickDistance = 0;
+let aimAngle = 0;
+let bullets = [];
+let enemies = [];
+let particles = [];
+let score = 0;
+let highScore = parseInt(localStorage.getItem('highScore')) || 0;
+let lives = 3;
+let lastExtraLife = 0;
+let playerInvulnerable = false;
+let playerBlinkInterval;
+let stageOneBosses = [];
+let powerups = [];
+let pausedPowerups = [];
+let powerupsPausedTime = 0;
+let currentPowerup = null;
+let powerupEndTime = 0;
+let projectilesDestroyed = 0;
+let isGameRunning = false;
+let animationFrameId = null;
+let playerName = '';
+let topPlayers = [];
+let highScoreName = localStorage.getItem('highScoreName') || '';
+let gameState = 'menu';
+let isPaused = false;
+let lastFireTime = 0;
 
 ColorScheme.getBarrierColor = function() {
     return this.currentMode === 'dark' ? '#00FFFF' : 
@@ -543,7 +544,7 @@ function hideMenu() {
 }
 
 function initializeMenu() {
-    document.getElementById('newGame').addEventListener('click', startNewGame);
+    document.getElementById('newGame').addEventListener('click', startGame);
 
     document.getElementById('continue').addEventListener('click', () => {
         if (isGameRunning && isPaused) {
@@ -738,28 +739,6 @@ function applyColorMode(mode) {
     });
 }
 
-function updateMobileControlsColor() {
-    if (isMobile()) {
-        const textColor = ColorScheme.getTextColor();
-        const backgroundColor = ColorScheme.getBackgroundColor();
-        const dpadButtons = document.querySelectorAll('#dpad button');
-        const stick = document.getElementById('stick');
-        const stickKnob = document.getElementById('stick-knob');
-
-        if (dpadButtons.length > 0 && stick && stickKnob) {
-            dpadButtons.forEach(button => {
-                button.style.borderColor = textColor;
-                button.style.color = textColor;
-            });
-
-            stick.style.borderColor = textColor;
-            stickKnob.style.backgroundColor = textColor;
-
-            document.body.style.backgroundColor = backgroundColor;
-        }
-    }
-}
-
 function updateColors() {
     canvas.style.backgroundColor = ColorScheme.getBackgroundColor();
     ctx.fillStyle = ColorScheme.getTextColor();
@@ -853,46 +832,6 @@ window.addEventListener('load', () => {
     updateRadioButtonStyles();
 });
 
-function startNewGame() {
-    //console.log("Starting new game...");
-    resetPlayerPosition();
-    showNamePrompt()
-        .then(name => {
-            if (name) {
-                player.name = name;
-                resetGame();
-                resizeCanvas();
-                startGame();
-            } else {
-                showMenu();
-            }
-        })
-        .catch(error => {
-            console.error("Error starting new game:", error);
-            showMenu();
-        });
-}
-
-function startGame() {
-    console.log("Starting game...");
-    hideMenu();
-    resetGame();
-    resizeCanvas();
-    resetPlayerPosition();
-    isGameRunning = true;
-    isPaused = false;
-    if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-    }
-    if (isMobile()) {
-        showMobileControls();
-        initMobileControls();
-        initializeMobileControls();
-    }
-    loadSettings();
-    updateMobileControlsColor();
-    animationFrameId = requestAnimationFrame(gameLoop);
-}
 function resetGame() {
     //console.log("Resetting game...");
     resetPlayerPosition();
@@ -937,14 +876,6 @@ function gameOver() {
     stageOneBossesDefeated = 0;
     
     showGameOverScreen();
-}
-
-function handleGameOverKeyPress(e) {
-    if (e.code === 'Space') {
-        e.preventDefault(); // Prevent any default space key behavior
-        window.removeEventListener('keydown', handleGameOverKeyPress);
-        startNewGame();
-    }
 }
 
 function updateContinueButton() {
@@ -1142,7 +1073,7 @@ function drawPowerups() {
 
             // Draw a border
             ctx.strokeStyle = ColorScheme.getTextColor();
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1;
             ctx.stroke();
             ctx.restore();
         }
@@ -1902,11 +1833,8 @@ function gameLoop(currentTime) {
         if (aimStickActive) {
             player.angle = aimStickAngle;
         }
-        if (aimStickActive && aimStickDistance > 0.5) {
-            fireBullet();
-        }
-    }
-
+    }   
+    
     if (!isPaused) {
         updateColors(); // Add this line at the beginning of the game loop
         updatePlayerAngle(lastMousePosition.x, lastMousePosition.y);
@@ -2078,13 +2006,6 @@ window.addEventListener('error', function(e) {
     alert("An error occurred. Please check the console for details.");
 });
 
-//console.log("Script loaded. BIG_BOSS_SPAWN_INTERVAL:", BIG_BOSS_SPAWN_INTERVAL);
-
-// Add these global variables if they're not already present
-let pausedPowerups = [];
-let powerupsPausedTime = 0;
-
-// Define the pausePowerups function
 function pausePowerups() {
     //console.log("Pausing powerups");
     if (currentPowerup) {
@@ -2287,7 +2208,6 @@ function drawBigBoss() {
             ctx.lineTo(proj.size / 2, proj.size / 2);
             ctx.closePath();
             ctx.stroke();
-
             ctx.restore();
         });
     }
@@ -2378,33 +2298,36 @@ function showGameOverScreen() {
 function handleGameOverTouch(e) {
     e.preventDefault();
     canvas.removeEventListener('touchstart', handleGameOverTouch);
-    startNewGame();
+    startGame();
 }
 
 function handleGameOverKeyPress(e) {
     if (e.code === 'Space') {
         e.preventDefault();
         window.removeEventListener('keydown', handleGameOverKeyPress);
-        startNewGame();
+        startGame();
     }
 }
 
-function startNewGame() {
-    console.log("Starting new game...");
-    showNamePrompt()
-        .then(name => {
-            if (name) {
-                player.name = name;
-                resetGame();
-                startGame();
-            } else {
-                showMenu();
-            }
-        })
-        .catch(error => {
-            console.error("Error starting new game:", error);
-            showMenu();
-        });
+function startGame() {
+    console.log("Starting game...");
+    hideMenu();
+    resetGame();
+    resizeCanvas();
+    resetPlayerPosition();
+    isGameRunning = true;
+    isPaused = false;
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+    }
+    if (isMobile()) {
+        showMobileControls();
+        initMobileControls();
+        initializeMobileControls();
+    }
+    loadSettings();
+    updateMobileControlsColor();
+    animationFrameId = requestAnimationFrame(gameLoop);
 }
 
 function resetGame() {
@@ -2462,7 +2385,7 @@ function drawTopPlayers() {
 function drawPlayerRank() {
     const playerRank = getPlayerRank();
     if (playerRank > 0) {
-        ctx.font = "16px 'Press Start 2P'";
+        ctx.font = "24px 'Press Start 2P'";
         ctx.fillStyle = ColorScheme.getTextColor();
         ctx.textAlign = 'right';
         ctx.fillText(`#${playerRank}`, canvas.width - 10, 30);
