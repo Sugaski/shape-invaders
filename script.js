@@ -119,7 +119,6 @@ function createMobileControls() {
     updateMobileControlsColor();
 }
 
-
 function handleMoveStickStart(e) {
     e.preventDefault();
     handleMoveStickMove(e);
@@ -137,8 +136,6 @@ function handleMoveStickMove(e) {
     
     player.dx = Math.cos(angle) * speed;
     player.dy = Math.sin(angle) * speed;
-
-    console.log('Move joystick update:', { angle, distance, speed, dx: player.dx, dy: player.dy });
 }
 
 function handleMoveStickEnd() {
@@ -146,7 +143,6 @@ function handleMoveStickEnd() {
     stickKnob.style.transform = 'translate(0, 0)';
     player.dx = 0;
     player.dy = 0;
-    console.log('Move joystick released, player velocity reset');
 }
 
 function handleAimStickStart(e) {
@@ -162,7 +158,6 @@ function handleAimStickMove(e) {
     const { angle } = updateStickPosition(touch, stick, stickKnob);
     
     player.angle = angle;
-    console.log('Aim joystick update:', { angle: player.angle });
 }
 
 function handleAimStickEnd() {
@@ -549,26 +544,6 @@ function resumeGame() {
     console.log("Game resumed. isPaused:", isPaused);
 }
 
-function updateMobileControlsColor() {
-    if (isMobile()) {
-        const textColor = ColorScheme.getTextColor();
-        const backgroundColor = ColorScheme.getBackgroundColor();
-        const moveStick = document.getElementById('moveStick');
-        const aimStick = document.getElementById('aimStick');
-        const moveStickKnob = document.getElementById('moveStickKnob');
-        const aimStickKnob = document.getElementById('aimStickKnob');
-
-        if (moveStick && aimStick && moveStickKnob && aimStickKnob) {
-            moveStick.style.borderColor = textColor;
-            aimStick.style.borderColor = textColor;
-            moveStickKnob.style.backgroundColor = textColor;
-            aimStickKnob.style.backgroundColor = textColor;
-
-            document.body.style.backgroundColor = backgroundColor;
-        }
-    }
-}
-
 function applyColorMode(mode) {
     document.body.classList.remove('light-mode', 'colorblind-mode');
     if (mode === 'light') {
@@ -616,13 +591,8 @@ function updateMobileControlsColor() {
 }
 
 function updateColors() {
-    // Update background color
     canvas.style.backgroundColor = ColorScheme.getBackgroundColor();
-    
-    // Update text color
     ctx.fillStyle = ColorScheme.getTextColor();
-    
-    // Only update colors for elements without a color assigned
     enemies.forEach(enemy => {
         if (!enemy.color) {
             enemy.color = ColorScheme.getRandomColor();
@@ -948,14 +918,8 @@ function destroyStageOneBoss(index) {
     stageOneBossesDestroyed++;
     stageOneBossesDefeated++;
     score += 50;
-    
-    // Increase spawn rate
-    currentEnemySpawnChance *= 1.2; // Increase by 20% each time
-    currentEnemySpawnChance = Math.min(currentEnemySpawnChance, 0.1); // Cap at 10% chance per frame
-    
-    //console.log("Stage-one boss destroyed. Total destroyed:", stageOneBossesDestroyed);
-    //console.log("Stage-one bosses defeated:", stageOneBossesDefeated);
-    //console.log("New enemy spawn chance:", currentEnemySpawnChance);
+    currentEnemySpawnChance *= 1.2;
+    currentEnemySpawnChance = Math.min(currentEnemySpawnChance, 0.1);
 }
 
 function spawnPowerup(x, y) {
@@ -997,11 +961,10 @@ function drawPowerups() {
             ctx.fillStyle = powerup.color;
             ctx.fill();
 
-            // Add a white border
+            // Draw a border
             ctx.strokeStyle = ColorScheme.getTextColor();
             ctx.lineWidth = 2;
             ctx.stroke();
-
             ctx.restore();
         }
     });
@@ -2095,6 +2058,7 @@ function gameOver() {
     updateHighScore();
     updateTopPlayers();
     showGameOverScreen();
+    hideMobileControls();
 }
 
 function showGameOverScreen() {
