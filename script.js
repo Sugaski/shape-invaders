@@ -223,7 +223,94 @@ function hideMobileControls() {
     }
 }
 
-let lastMousePosition = { x: 0, y: 0 };
+function initMobileControls() {
+    const moveStick = document.getElementById('moveStick');
+    const aimStick = document.getElementById('aimStick');
+    const moveStickKnob = document.getElementById('moveStickKnob');
+    const aimStickKnob = document.getElementById('aimStickKnob');
+
+    // Move stick touch events
+    moveStick.addEventListener('touchstart', (e) => handleTouchStart(e, 'move'));
+    moveStick.addEventListener('touchmove', (e) => handleTouchMove(e, 'move'));
+    moveStick.addEventListener('touchend', () => handleTouchEnd('move'));
+
+    // Aim stick touch events
+    aimStick.addEventListener('touchstart', (e) => handleTouchStart(e, 'aim'));
+    aimStick.addEventListener('touchmove', (e) => handleTouchMove(e, 'aim'));
+    aimStick.addEventListener('touchend', () => handleTouchEnd('aim'));
+
+    function handleTouchStart(e, stickType) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const stick = stickType === 'move' ? moveStick : aimStick;
+        const rect = stick.getBoundingClientRect();
+
+        if (stickType === 'move') {
+            moveStickActive = true;
+            moveStickStartX = touch.clientX - rect.left;
+            moveStickStartY = touch.clientY - rect.top;
+        } else {
+            aimStickActive = true;
+            aimStickStartX = touch.clientX - rect.left;
+            aimStickStartY = touch.clientY - rect.top;
+        }
+    }
+
+    function handleTouchMove(e, stickType) {
+        e.preventDefault();
+        if ((stickType === 'move' && !moveStickActive) || (stickType === 'aim' && !aimStickActive)) return;
+
+        const touch = e.touches[0];
+        const stick = stickType === 'move' ? moveStick : aimStick;
+        const knob = stickType === 'move' ? moveStickKnob : aimStickKnob;
+        const rect = stick.getBoundingClientRect();
+
+        let deltaX, deltaY;
+        if (stickType === 'move') {
+            deltaX = touch.clientX - rect.left - moveStickStartX;
+            deltaY = touch.clientY - rect.top - moveStickStartY;
+        } else {
+            deltaX = touch.clientX - rect.left - aimStickStartX;
+            deltaY = touch.clientY - rect.top - aimStickStartY;
+        }
+
+        const stickRadius = stick.offsetWidth / 2;
+        const distance = Math.min(stickRadius, Math.sqrt(deltaX * deltaX + deltaY * deltaY));
+        const angle = Math.atan2(deltaY, deltaX);
+
+        const knobX = distance * Math.cos(angle);
+        const knobY = distance * Math.sin(angle);
+
+        knob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+
+        if (stickType === 'move') {
+            player.vx = (knobX / stickRadius) * player.speed;
+            player.vy = (knobY / stickRadius) * player.speed;
+        } else {
+            const aimAngle = Math.atan2(knobY, knobX);
+            player.angle = aimAngle;
+            if (distance > 0) {
+                player.isShooting = true;
+            } else {
+                player.isShooting = false;
+            }
+        }
+    }
+
+    function handleTouchEnd(stickType) {
+        const knob = stickType === 'move' ? moveStickKnob : aimStickKnob;
+        knob.style.transform = 'translate(0px, 0px)';
+
+        if (stickType === 'move') {
+            moveStickActive = false;
+            player.vx = 0;
+            player.vy = 0;
+        } else {
+            aimStickActive = false;
+            player.isShooting = false;
+        }
+    }
+}
 
 const menuScreen = document.getElementById('menuScreen');
 const gameCanvas = document.getElementById('gameCanvas');
@@ -245,6 +332,11 @@ const player = {
     dy: 0,
     angle: 0
 };
+
+let lastMousePosition = { x: 0, y: 0 };
+let moveStickActive = false;
+let aimStickActive = false;
+let moveStickStartX, moveStickStartY, aimStickStartX, aimStickStartY;
 let aimAngle = 0;
 let bullets = [];
 let enemies = [];
@@ -714,6 +806,7 @@ function startGame() {
     }
     if (isMobile()) {
         showMobileControls();
+        initMobileControls();
     }
     loadSettings();
     updateMobileControlsColor();
@@ -1616,16 +1709,6 @@ function togglePause() {
     } else {
         resumeGame();
     }
-    updateContinueButton();
-}
-
-function startGameLoop() {
-    //console.log("Starting game loop...");
-    isGameRunning = true;
-    isPaused = false;
-    lastFireTime = 0;
-    //console.log("Game started. isPaused:", isPaused);
-    gameLoop();
     updateContinueButton();
 }
 
