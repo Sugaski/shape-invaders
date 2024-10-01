@@ -13,11 +13,9 @@ function resizeCanvas() {
 }
 
 function updateGameElementsSize() {
-    const scaleFactor = isMobile() ? MOBILE_SCALE_FACTOR : 1;
+    const scaleFactor = isMobile() ? MOBILE_SCALE_FACTOR : 0.5;
     player.size = 45 * scaleFactor;
     player.speed = 300 * scaleFactor;
-    
-    // Adjust player position for mobile view
     if (isMobile()) {
         player.x = Math.min(Math.max(player.x, player.size / 2), canvas.width - player.size / 2);
         player.y = Math.min(Math.max(player.y, player.size / 2), canvas.height - player.size / 2);
@@ -89,6 +87,18 @@ function isMobile() {
 
 function initializeMobileControls() {
     const mobileEscapeButton = document.getElementById('mobileEscapeButton');
+    const moveStick = document.getElementById('moveStick');
+    const aimStick = document.getElementById('aimStick');
+    const moveStickKnob = document.getElementById('moveStickKnob');
+    const aimStickKnob = document.getElementById('aimStickKnob');
+
+    moveStick.addEventListener('touchstart', (e) => handleStickStart(e, 'move'));
+    moveStick.addEventListener('touchmove', (e) => handleStickMove(e, 'move'));
+    moveStick.addEventListener('touchend', () => handleStickEnd('move'));
+
+    aimStick.addEventListener('touchstart', (e) => handleStickStart(e, 'aim'));
+    aimStick.addEventListener('touchmove', (e) => handleStickMove(e, 'aim'));
+    aimStick.addEventListener('touchend', () => handleStickEnd('aim'));
     
     if (mobileEscapeButton) {
         mobileEscapeButton.addEventListener('click', () => {
@@ -98,6 +108,57 @@ function initializeMobileControls() {
                 hideSettings();
             }
         });
+    }
+}
+
+function handleStickStart(e, stickType) {
+    e.preventDefault();
+    if (stickType === 'move') {
+        moveStickActive = true;
+    } else {
+        aimStickActive = true;
+    }
+}
+
+function handleStickMove(e, stickType) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const stick = document.getElementById(`${stickType}Stick`);
+    const knob = document.getElementById(`${stickType}StickKnob`);
+    const rect = stick.getBoundingClientRect();
+    
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    let dx = touch.clientX - centerX;
+    let dy = touch.clientY - centerY;
+    
+    const distance = Math.min(Math.sqrt(dx * dx + dy * dy), rect.width / 2);
+    const angle = Math.atan2(dy, dx);
+    
+    const knobX = Math.cos(angle) * distance;
+    const knobY = Math.sin(angle) * distance;
+    
+    knob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+    
+    if (stickType === 'move') {
+        moveStickAngle = angle;
+    } else {
+        aimStickAngle = angle;
+        player.angle = angle;
+    }
+}
+
+function handleStickEnd(stickType) {
+    const knob = document.getElementById(`${stickType}StickKnob`);
+    knob.style.transform = 'translate(0px, 0px)';
+    
+    if (stickType === 'move') {
+        moveStickActive = false;
+        player.dx = 0;
+        player.dy = 0;
+    } else {
+        aimStickActive = false;
     }
 }
 
@@ -238,7 +299,7 @@ function initMobileControls() {
     aimStick.addEventListener('touchstart', (e) => handleTouchStart(e, 'aim'));
     aimStick.addEventListener('touchmove', (e) => handleTouchMove(e, 'aim'));
     aimStick.addEventListener('touchend', () => handleTouchEnd('aim'));
-
+}
     function handleTouchStart(e, stickType) {
         e.preventDefault();
         const touch = e.touches[0];
@@ -310,10 +371,15 @@ function initMobileControls() {
             player.isShooting = false;
         }
     }
-}
+
 
 const menuScreen = document.getElementById('menuScreen');
 const gameCanvas = document.getElementById('gameCanvas');
+const MOBILE_ENEMY_SPEED_MULTIPLIER = 0.7;
+const MOBILE_STAGE_ONE_BOSS_SPEED_MULTIPLIER = 0.8;
+const MOBILE_BIG_BOSS_PROJECTILE_SPEED_MULTIPLIER = 0.75;
+const MOBILE_SPEED_MULTIPLIER = 1;
+const MOBILE_SCALE_FACTOR = 0.8;
 const BIG_BOSS_SPAWN_INTERVAL = 5; 
 const STAGE_ONE_BOSS_SPAWN_INTERVAL = 500; // Spawn stage-one boss every 500 points
 const INITIAL_ENEMY_SPAWN_CHANCE = 0.02;
@@ -322,8 +388,6 @@ const POWERUP_DURATION = 20000; // 20 seconds
 const POWERUP_FLASH_DURATION = 5000;
 const BARRIER_SPEED_MULTIPLIER = 2;
 const MAX_ENEMIES = 15;
-const MOBILE_SPEED_MULTIPLIER = 1;
-const MOBILE_SCALE_FACTOR = 0.6;
 const player = {
     x: canvas.width / 2,
     y: canvas.height / 2,
@@ -337,6 +401,9 @@ const player = {
 let lastMousePosition = { x: 0, y: 0 };
 let moveStickActive = false;
 let aimStickActive = false;
+let moveStickAngle = 0;
+let moveStickDistance = 0;
+let aimStickAngle = 0;
 let moveStickStartX, moveStickStartY, aimStickStartX, aimStickStartY;
 let aimAngle = 0;
 let bullets = [];
@@ -817,6 +884,7 @@ function startGame() {
     if (isMobile()) {
         showMobileControls();
         initMobileControls();
+        initializeMobileControls();
     }
     loadSettings();
     updateMobileControlsColor();
@@ -881,7 +949,9 @@ function updateContinueButton() {
 }
 
 function spawnStageOneBoss() {
-    if (!bigBoss && score > 0 && score % STAGE_ONE_BOSS_SPAWN_INTERVAL === 0 && stageOneBosses.length === 0) {
+    const spawnInterval = isMobile() ? 250 : STAGE_ONE_BOSS_SPAWN_INTERVAL;
+    
+    if (!bigBoss && score > 0 && score % spawnInterval === 0 && stageOneBosses.length === 0) {
         let x, y;
         
         // Determine which side of the screen to spawn on
@@ -910,7 +980,9 @@ function spawnStageOneBoss() {
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         const angle = Math.atan2(centerY - y, centerX - x);
-        const speed = 2 + Math.random() * 2; // Random speed between 2 and 4
+        const speed = isMobile() ? 
+            (2 + Math.random() * 2) * MOBILE_STAGE_ONE_BOSS_SPEED_MULTIPLIER : 
+            2 + Math.random() * 2;
 
         const baseSize = 60;
         const size = isMobile() ? baseSize * MOBILE_SCALE_FACTOR : baseSize;
@@ -1407,11 +1479,15 @@ function movePlayer(currentTime) {
     const speedMultiplier = player.hasBarrier ? BARRIER_SPEED_MULTIPLIER : 1;
 
     if (isMobile()) {
-        // Use joystick input for mobile
-        player.x += player.dx * deltaTime * speedMultiplier;
-        player.y += player.dy * deltaTime * speedMultiplier;
+        if (moveStickActive) {
+            const speed = player.speed * speedMultiplier;
+            player.dx = Math.cos(moveStickAngle) * speed;
+            player.dy = Math.sin(moveStickAngle) * speed;
+        }
+        player.x += player.dx * deltaTime;
+        player.y += player.dy * deltaTime;
     } else {
-        // Use keyboard input for desktop
+        // Desktop controls remain unchanged
         if (keys.ArrowLeft || keys.a) player.x -= player.speed * deltaTime * speedMultiplier;
         if (keys.ArrowRight || keys.d) player.x += player.speed * deltaTime * speedMultiplier;
         if (keys.ArrowUp || keys.w) player.y -= player.speed * deltaTime * speedMultiplier;
@@ -1421,16 +1497,6 @@ function movePlayer(currentTime) {
     // Ensure player stays within canvas boundaries
     player.x = Math.max(player.size / 2, Math.min(canvas.width - player.size / 2, player.x));
     player.y = Math.max(player.size / 2, Math.min(canvas.height - player.size / 2, player.y));
-
-    console.log('Player position updated:', { 
-        x: player.x, 
-        y: player.y, 
-        dx: player.dx, 
-        dy: player.dy,
-        angle: player.angle,
-        hasBarrier: player.hasBarrier,
-        speed: player.speed * speedMultiplier
-    });
 }
 
 function moveBullets() {
@@ -1818,6 +1884,10 @@ function gameLoop(currentTime) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
         return;
+    }
+
+    if (isMobile() && aimStickActive) {
+        player.angle = aimStickAngle;
     }
 
     if (!isPaused) {
