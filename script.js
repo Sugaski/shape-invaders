@@ -381,7 +381,7 @@ const MOBILE_BIG_BOSS_PROJECTILE_SPEED_MULTIPLIER = 0.75;
 const MOBILE_SPEED_MULTIPLIER = 1;
 const MOBILE_SCALE_FACTOR = 0.8;
 const BIG_BOSS_SPAWN_INTERVAL = 5; 
-const STAGE_ONE_BOSS_SPAWN_INTERVAL = 500; // Spawn stage-one boss every 500 points
+const STAGE_ONE_BOSS_SPAWN_INTERVAL = 50; // Spawn stage-one boss every 500 points
 const INITIAL_ENEMY_SPAWN_CHANCE = 0.02;
 let currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
 const POWERUP_DURATION = 20000; // 20 seconds
@@ -391,8 +391,8 @@ const MAX_ENEMIES = 15;
 const player = {
     x: canvas.width / 2,
     y: canvas.height / 2,
-    size: 35,
-    speed: 200,
+    size: 45,
+    speed: 300,
     dx: 0,
     dy: 0,
     angle: 0
@@ -854,6 +854,7 @@ window.addEventListener('load', () => {
 
 function startNewGame() {
     //console.log("Starting new game...");
+    resetPlayerPosition();
     showNamePrompt()
         .then(name => {
             if (name) {
@@ -876,6 +877,7 @@ function startGame() {
     hideMenu();
     resetGame();
     resizeCanvas();
+    resetPlayerPosition();
     isGameRunning = true;
     isPaused = false;
     if (animationFrameId) {
@@ -892,6 +894,7 @@ function startGame() {
 }
 function resetGame() {
     //console.log("Resetting game...");
+    resetPlayerPosition();
     player.x = canvas.width / 2;
     player.y = canvas.height / 2;
     player.angle = 0;
@@ -1826,6 +1829,7 @@ function resetPlayerPosition() {
     player.y = canvas.height / 2;
     player.dx = 0;
     player.dy = 0;
+    player.angle = 0;
 }
 
 function updateTopPlayers() {
