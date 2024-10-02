@@ -14,7 +14,7 @@ function resizeCanvas() {
 
 function updateGameElementsSize() {
     const scaleFactor = isMobile() ? MOBILE_SCALE_FACTOR : 0.5;
-    player.size = 45 * scaleFactor;
+    player.size = 35 * scaleFactor;
     player.speed = 300 * scaleFactor;
     if (isMobile()) {
         player.x = Math.min(Math.max(player.x, player.size / 2), canvas.width - player.size / 2);
@@ -378,16 +378,16 @@ const menuScreen = document.getElementById('menuScreen');
 const gameCanvas = document.getElementById('gameCanvas');
 const MOBILE_ENEMY_SPEED_MULTIPLIER = 0.7;
 const MOBILE_STAGE_ONE_BOSS_SPEED_MULTIPLIER = 0.8;
-const MOBILE_BIG_BOSS_PROJECTILE_SPEED_MULTIPLIER = 0.75;
+const MOBILE_BIG_BOSS_PROJECTILE_SPEED_MULTIPLIER = 0.5;
 const MOBILE_SPEED_MULTIPLIER = 1;
 const MOBILE_SCALE_FACTOR = 0.8;
 const BIG_BOSS_SPAWN_INTERVAL = 5; 
-const STAGE_ONE_BOSS_SPAWN_INTERVAL = 50; // Spawn stage-one boss every 500 points
+const STAGE_ONE_BOSS_SPAWN_INTERVAL = 500; // Spawn stage-one boss every 500 points
 const INITIAL_ENEMY_SPAWN_CHANCE = 0.02;
 const fireInterval = 200;
-const POWERUP_DURATION = 20000; // 20 seconds
+const POWERUP_DURATION = 15000; //15 seconds
 const POWERUP_FLASH_DURATION = 5000;
-const BARRIER_SPEED_MULTIPLIER = 2;
+const BARRIER_SPEED_MULTIPLIER = 4;
 const MAX_ENEMIES = 15;
 const player = {
     x: canvas.width / 2,
@@ -488,7 +488,7 @@ function updateCustomCursor(position) {
     ctx.beginPath();
     ctx.arc(position.x, position.y, 15, 0, Math.PI * 2);
     ctx.lineWidth = 2;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 15;
     ctx.stroke();
     
     ctx.restore();
@@ -544,7 +544,7 @@ function hideMenu() {
 }
 
 function initializeMenu() {
-    document.getElementById('newGame').addEventListener('click', startGame);
+    document.getElementById('newGame').addEventListener('click', startNewGame);
 
     document.getElementById('continue').addEventListener('click', () => {
         if (isGameRunning && isPaused) {
@@ -961,8 +961,6 @@ function drawStageOneBosses() {
         ctx.closePath();
         ctx.fill();
 
-        ctx.shadowBlur = 0;
-
         ctx.fillStyle = ColorScheme.getTextColor();
         ctx.fillRect(boss.x - boss.size / 2, boss.y - boss.size / 2 - 10, (boss.size * boss.health) / 3, 5);
     });
@@ -1262,7 +1260,6 @@ function drawBullets() {
             ctx.strokeStyle = `rgba(255, 0, 0, ${opacity * 0.5})`;
             ctx.lineWidth = 12;
             ctx.stroke();
-            ctx.shadowBlur = 0; // Reset shadow blur
         } else if (bullet.isHoning) {
             ctx.fillStyle = '#ffff00';
             ctx.beginPath();
@@ -1312,7 +1309,7 @@ function drawPlayer() {
     }
 
     // Add glow effect
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 30;
     ctx.shadowColor = ColorScheme.getTextColor();
 }
 
@@ -1834,7 +1831,7 @@ function gameLoop(currentTime) {
             player.angle = aimStickAngle;
         }
     }   
-    
+
     if (!isPaused) {
         updateColors(); // Add this line at the beginning of the game loop
         updatePlayerAngle(lastMousePosition.x, lastMousePosition.y);
@@ -2095,8 +2092,8 @@ function moveBigBoss() {
         // Check if big boss health has reached 0
         if (bigBoss.health <= 0) {
             bigBoss.defeated = true;
-            bigBoss.shakeTime = 300; // 5 seconds at 60 FPS
-            bigBoss.projectiles = []; // Clear all projectiles
+            bigBoss.shakeTime = 300; // 3 seconds
+            bigBoss.projectiles = [];
             //console.log("Big boss defeated, projectiles cleared");
         }
     }
@@ -2127,10 +2124,10 @@ function launchBigBossProjectile() {
         y: bigBoss.y,
         size: size,
         angle: angle,
-        speed: 2, // Increased speed from 1 to 2
+        speed: 2,
         health: 5,
         color: getRandomNeonColor(),
-        invulnerableTime: 5000, // 5 seconds of invulnerability
+        invulnerableTime: 4000, // 4 seconds of invulnerability
         spawnTime: Date.now() // Record spawn time
     });
 }
@@ -2286,8 +2283,6 @@ function showGameOverScreen() {
         ctx.fillText('Press SPACE to continue', canvas.width / 2, centerY + 120);
     }
     
-    ctx.shadowBlur = 0;
-    
     if (isMobile()) {
         canvas.addEventListener('touchstart', handleGameOverTouch);
     } else {
@@ -2298,15 +2293,29 @@ function showGameOverScreen() {
 function handleGameOverTouch(e) {
     e.preventDefault();
     canvas.removeEventListener('touchstart', handleGameOverTouch);
-    startGame();
+    startNewGame();
 }
 
 function handleGameOverKeyPress(e) {
     if (e.code === 'Space') {
         e.preventDefault();
         window.removeEventListener('keydown', handleGameOverKeyPress);
-        startGame();
+        startNewGame();
     }
+}
+
+function startNewGame() {
+    //console.log("Starting new game...");
+    resetPlayerPosition();
+    showNamePrompt()
+        .then(name => {
+            if (name) {
+                player.name = name;
+                resetGame();
+                resizeCanvas();
+                startGame();
+            } 
+        })
 }
 
 function startGame() {
@@ -2385,10 +2394,22 @@ function drawTopPlayers() {
 function drawPlayerRank() {
     const playerRank = getPlayerRank();
     if (playerRank > 0) {
-        ctx.font = "24px 'Press Start 2P'";
+        ctx.font = "36px 'Press Start 2P'";
         ctx.fillStyle = ColorScheme.getTextColor();
-        ctx.textAlign = 'right';
-        ctx.fillText(`#${playerRank}`, canvas.width - 10, 30);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // Define padding from the top and right edges
+        const paddingTop = 60;
+        const paddingRight = 60;
+        
+        // Calculate position
+        const x = canvas.width - paddingRight;
+        const y = paddingTop;
+
+        // Draw the rank text
+        ctx.fillStyle = ColorScheme.getTextColor();
+        ctx.fillText(`#${playerRank}`, x, y);
     }
 }
 
