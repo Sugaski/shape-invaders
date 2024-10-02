@@ -390,25 +390,27 @@ body.colorblind-mode #settingsMenu button:hover {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px;
-        background-color: rgba(0, 0, 0, 0.1); /* Add a slight background for visibility */
-        z-index: 1000; /* Ensure it's above the canvas */
+        padding: 20px;
+        background-color: rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        box-sizing: border-box;
     }
 
     #moveStick, #aimStick {
         position: relative;
-        width: 35%;
-        height: 90%;
-        border: 2px solid rgba(255, 255, 255, 0.5); /* Increase opacity for visibility */
+        width: 30%;
+        height: 0;
+        padding-bottom: 30%;
+        border: 2px solid rgba(255, 255, 255, 0.5);
         border-radius: 50%;
-        background-color: rgba(255, 255, 255, 0.1); /* Add a slight background */
+        background-color: rgba(255, 255, 255, 0.1);
     }
 
     #moveStickKnob, #aimStickKnob {
         position: absolute;
-        width: 30px;
-        height: 30px;
-        background-color: rgba(255, 255, 255, 0.5); /* Increase opacity for visibility */
+        width: 30%;
+        height: 30%;
+        background-color: rgba(255, 255, 255, 0.5);
         border-radius: 50%;
         top: 50%;
         left: 50%;
@@ -417,20 +419,22 @@ body.colorblind-mode #settingsMenu button:hover {
     }
 
     #mobileEscapeButton {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
         width: 60px;
         height: 60px;
-        font-size: 12px;
-        padding: 5px;
         border-radius: 50%;
-        background-color: rgba(255, 255, 255, 0.3); /* Increase opacity for visibility */
+        border: 2px solid #fff;
+        background-color: rgba(0, 0, 0, 0.5);
         color: #fff;
-        border: 2px solid rgba(255, 255, 255, 0.5);
+        font-size: 14px;
+        font-family: 'Press Start 2P', cursive;
         display: flex;
         justify-content: center;
         align-items: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        z-index: 1001; /* Ensure it's above other mobile controls */
+        padding: 0;
     }
 
     #mobileEscapeButton:active {
