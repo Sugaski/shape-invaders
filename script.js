@@ -13,8 +13,8 @@ function resizeCanvas() {
 }
 
 function updateGameElementsSize() {
-    const scaleFactor = isMobile() ? MOBILE_SCALE_FACTOR : 0.5;
-    player.size = 35 * scaleFactor;
+    const scaleFactor = isMobile() ? MOBILE_SCALE_FACTOR : 1;
+    player.size = isMobile() ? 35 * scaleFactor : 30; // Update player size for both mobile and desktop
     player.speed = 300 * scaleFactor;
     if (isMobile()) {
         player.x = Math.min(Math.max(player.x, player.size / 2), canvas.width - player.size / 2);
@@ -376,8 +376,8 @@ function initMobileControls() {
 
 const menuScreen = document.getElementById('menuScreen');
 const gameCanvas = document.getElementById('gameCanvas');
-const MOBILE_ENEMY_SPEED_MULTIPLIER = 0.7;
-const MOBILE_STAGE_ONE_BOSS_SPEED_MULTIPLIER = 0.8;
+const MOBILE_ENEMY_SPEED_MULTIPLIER = 0.6;
+const MOBILE_STAGE_ONE_BOSS_SPEED_MULTIPLIER = 0.7;
 const MOBILE_BIG_BOSS_PROJECTILE_SPEED_MULTIPLIER = 0.5;
 const MOBILE_SPEED_MULTIPLIER = 1;
 const MOBILE_SCALE_FACTOR = 0.8;
@@ -392,7 +392,7 @@ const MAX_ENEMIES = 15;
 const player = {
     x: canvas.width / 2,
     y: canvas.height / 2,
-    size: 55,
+    size: isMobile() ? 35 * MOBILE_SCALE_FACTOR : 30, // This will be updated in updateGameElementsSize
     speed: 300,
     dx: 0,
     dy: 0,
@@ -1491,7 +1491,7 @@ function spawnEnemy() {
         const y = Math.random() * canvas.height;
         const angle = Math.random() * Math.PI * 2;
         const speed = 1 + Math.random() * 2;
-        const baseSize = 25;
+        const baseSize = isMobile() ? 25 : 20; 
         const size = isMobile() ? baseSize * MOBILE_SCALE_FACTOR : baseSize;
         enemies.push({
             x: x,
@@ -2124,7 +2124,7 @@ function launchBigBossProjectile() {
         y: bigBoss.y,
         size: size,
         angle: angle,
-        speed: 2,
+        speed: 1.5,
         health: 5,
         color: getRandomNeonColor(),
         invulnerableTime: 4000, // 4 seconds of invulnerability
