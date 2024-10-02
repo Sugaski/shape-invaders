@@ -387,7 +387,8 @@ const INITIAL_ENEMY_SPAWN_CHANCE = 0.02;
 const fireInterval = 200;
 const POWERUP_DURATION = 15000; //15 seconds
 const POWERUP_FLASH_DURATION = 5000;
-const BARRIER_SPEED_MULTIPLIER = 4;
+const BARRIER_SPEED_MULTIPLIER = 3.5;
+const HOMING_MISSILE_FLASH_INTERVAL = 500;
 const MAX_ENEMIES = 15;
 const player = {
     x: canvas.width / 2,
@@ -1163,6 +1164,11 @@ function fireBullet() {
     // Calculate the position of the triangle's tip
     const tipX = player.x + Math.cos(angle) * (player.size / 2);
     const tipY = player.y + Math.sin(angle) * (player.size / 2);
+
+    // Check if the barrier powerup is active
+    if (currentPowerup === 4 && player.hasBarrier) {
+        return; // Don't fire bullets if the barrier is active
+    }
     
     if (currentPowerup === 1) {
         for (let i = -1; i <= 1; i++) {
@@ -1261,10 +1267,18 @@ function drawBullets() {
             ctx.lineWidth = 12;
             ctx.stroke();
         } else if (bullet.isHoning) {
-            ctx.fillStyle = '#ffff00';
-            ctx.beginPath();
-            ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillStyle = '#ff0000';
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Add a glow effect
+                ctx.shadowColor = '#ff0000';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, 7, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.shadowBlur = 0; // Reset shadow blur
         } else {
             ctx.fillStyle = '#f00';
             ctx.beginPath();
@@ -1322,6 +1336,9 @@ function drawBarrier() {
 }
 
 function drawPolygon(x, y, radius, sides, color) {
+    ctx.save();
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = color;
     ctx.fillStyle = color;
     ctx.beginPath();
     for (let i = 0; i < sides; i++) {
@@ -1336,6 +1353,7 @@ function drawPolygon(x, y, radius, sides, color) {
     }
     ctx.closePath();
     ctx.fill();
+    ctx.restore();
 }
 
 function drawEnemies() {
@@ -1355,19 +1373,13 @@ function drawParticles() {
     ctx.globalAlpha = 1;
 }
 
-function drawLives() {
-    ctx.font = "16px 'Press Start 2P'";
-    ctx.fillStyle = ColorScheme.getTextColor();
-    ctx.textAlign = "left";
-    ctx.fillText(`Lives: ${lives}`, 10, 90);
-}
-
 function drawScore() {
     ctx.font = "16px 'Press Start 2P'";
     ctx.fillStyle = ColorScheme.getTextColor();
     ctx.textAlign = 'left';
     ctx.fillText(`Score: ${score}`, 10, 30);
     ctx.fillText(`High Score: ${highScore}`, 10, 60);
+    ctx.fillText(`Lives: ${lives}`, 10, 90);
 }
 
 function drawTopPlayers() {
@@ -1388,12 +1400,19 @@ function drawBossCounters() {
     ctx.fillStyle = ColorScheme.getTextColor();
     ctx.textAlign = 'right';
     
-    const bottomPadding = 10;
+    const bottomPadding = isMobile() ? 100 : 10; // Increase bottom padding for mobile
     const rightPadding = 10;
+    
+    // Adjust font size for mobile
+    if (isMobile()) {
+        ctx.font = '10px "Press Start 2P"';
+    }
+    
+    const lineHeight = isMobile() ? 20 : 25; // Reduce line height for mobile
     
     ctx.fillText(`Stage 1 Bosses: ${stageOneBossesDestroyed}`, 
         canvas.width - rightPadding, 
-        canvas.height - bottomPadding - 20);
+        canvas.height - bottomPadding - lineHeight);
     
     ctx.fillText(`Stage 2 Bosses: ${bigBossesDestroyed}`, 
         canvas.width - rightPadding, 
@@ -1880,10 +1899,9 @@ function gameLoop(currentTime) {
             if (typeof drawBigBossProjectiles === 'function') drawBigBossProjectiles();
             if (typeof drawPowerups === 'function') drawPowerups();
             if (typeof drawParticles === 'function') drawParticles();
-            drawScore();
-            drawLives();
             if (typeof drawTopPlayers === 'function') drawTopPlayers();
             drawBossCounters();
+            drawScore();
 
             //console.log("Current stageOneBossesDefeated:", stageOneBossesDefeated);
             //console.log("Big boss exists:", !!bigBoss);
@@ -2373,14 +2391,6 @@ function resetAfterBigBoss() {
     resumePowerups();
     spawnEnemies(15);
     spawnStageOneBoss(); 
-}
-
-function spawnEnemies(count) {
-    const spawnCount = Math.min(count, MAX_ENEMIES - enemies.length);
-    //console.log(`Spawning ${spawnCount} enemies`);
-    for (let i = 0; i < spawnCount; i++) {
-        spawnEnemy();
-    }
 }
 
 function drawTopPlayers() {
