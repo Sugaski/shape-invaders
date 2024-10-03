@@ -304,14 +304,11 @@ function handleTouchMove(e, stickType) {
     const knob = document.getElementById(`${stickType}StickKnob`);
     const rect = stick.getBoundingClientRect();
 
-    let deltaX, deltaY;
-    if (stickType === 'move') {
-        deltaX = touch.clientX - rect.left - moveStickStartX;
-        deltaY = touch.clientY - rect.top - moveStickStartY;
-    } else {
-        deltaX = touch.clientX - rect.left - aimStickStartX;
-        deltaY = touch.clientY - rect.top - aimStickStartY;
-    }
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    let deltaX = touch.clientX - centerX;
+    let deltaY = touch.clientY - centerY;
 
     const stickRadius = stick.offsetWidth / 2;
     const distance = Math.min(stickRadius, Math.sqrt(deltaX * deltaX + deltaY * deltaY));
@@ -1812,8 +1809,25 @@ function gameLoop(currentTime) {
     }
 
     if (isMobile()) {
-        player.angle = aimStickAngle;
-    }    
+        const aimStick = document.getElementById('aimStick');
+        const aimStickKnob = document.getElementById('aimStickKnob');
+        if (aimStickActive) {
+            const rect = aimStick.getBoundingClientRect();
+            const knobRect = aimStickKnob.getBoundingClientRect();
+            
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const knobCenterX = knobRect.left + knobRect.width / 2;
+            const knobCenterY = knobRect.top + knobRect.height / 2;
+            
+            const deltaX = knobCenterX - centerX;
+            const deltaY = knobCenterY - centerY;
+            
+            if (deltaX !== 0 || deltaY !== 0) {
+                player.angle = Math.atan2(deltaY, deltaX);
+            }
+        }
+    } 
 
     if (!isPaused) {
         updateColors(); // Add this line at the beginning of the game loop
