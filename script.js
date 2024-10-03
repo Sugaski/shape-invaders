@@ -357,7 +357,6 @@ const fireInterval = 200;
 const POWERUP_DURATION = 15000; //15 seconds
 const POWERUP_FLASH_DURATION = 5000;
 const BARRIER_SPEED_MULTIPLIER = 3.5;
-const HOMING_MISSILE_FLASH_INTERVAL = 500;
 const MAX_ENEMIES = 15;
 const player = {
     x: canvas.width / 2,
@@ -372,17 +371,20 @@ const ColorScheme = {
     dark: {
         text: '#0f0',
         background: '#000',
-        colors: ['#4FAF44', '#F6EB14', '#FF9526', '#EF4423', '#2A3492']
+        colors: ['#4FAF44', '#F6EB14', '#FF9526', '#EF4423', '#2A3492'],
+        barrier: '#00FFFF'
     },
     light: {
         text: '#0d2140',
         background: '#FAF9F6',
-        colors: ['#a0eba8', '#f53141', '#f2621f', '#FFC300', '#ae88e3']
+        colors: ['#a0eba8', '#f53141', '#f2621f', '#FFC300', '#ae88e3'],
+        barrier: '#FF00FF'
     },
     colorblind: {
         text: '#009e73',
         background: '#000',
-        colors: ['#d55e00', '#cc79a7', '#0072b2', '#f0e442', '#009e73']
+        colors: ['#d55e00', '#cc79a7', '#0072b2', '#f0e442', '#009e73'],
+        barrier: '#FFD700'
     },
     current: 'dark',
     getTextColor: function() {
@@ -397,6 +399,9 @@ const ColorScheme = {
     },
     getPlayerColor: function() {  
         return this.getTextColor();
+    },
+    getBarrierColor: function() {
+        return this[this.current].barrier;
     }
 };
 
@@ -433,12 +438,6 @@ let highScoreName = localStorage.getItem('highScoreName') || '';
 let gameState = 'menu';
 let isPaused = false;
 let lastFireTime = 0;
-
-ColorScheme.getBarrierColor = function() {
-    return this.currentMode === 'dark' ? '#00FFFF' : 
-           this.currentMode === 'light' ? '#FF00FF' : 
-           '#FFD700'; // Gold color for colorblind mode
-};
 
 function updateCustomCursor(position) {
     if (!isGameRunning || isPaused || isMobile()) return;
