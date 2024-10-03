@@ -2121,17 +2121,11 @@ function launchBigBossProjectile() {
         angle: angle,
         speed: 1.5,
         health: 5,
-        color: getRandomNeonColor(),
-        invulnerableTime: 4000, // 4 seconds of invulnerability
+        color: ColorScheme.getRandomColor(),
+        invulnerableTime: 3000, // 3 seconds of invulnerability
         spawnTime: Date.now() // Record spawn time
     });
 }
-
-function getRandomNeonColor() {
-    const neonColors = ['#FF00FF', '#00FFFF', '#FF00FF', '#FFFF00', '#00FF00'];
-    return neonColors[Math.floor(Math.random() * neonColors.length)];
-}
-
 
 function drawBigBoss() {
     if (bigBoss) {
@@ -2372,7 +2366,7 @@ function drawTopPlayers() {
     if (isMobile()) {
         drawPlayerRank();
     } else {
-        drawFullTopPlayersList();
+        drawTopPlayersList();
     }
 }
 
@@ -2380,25 +2374,18 @@ function drawPlayerRank() {
     const playerRank = getPlayerRank();
     if (playerRank > 0) {
         ctx.font = "36px 'Press Start 2P'";
-        ctx.fillStyle = ColorScheme.getTextColor();
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        
-        // Define padding from the top and right edges
-        const paddingTop = 60;
-        const paddingRight = 60;
-        
-        // Calculate position
-        const x = canvas.width - paddingRight;
-        const y = paddingTop;
-
-        // Draw the rank text
         ctx.fillStyle = ColorScheme.getTextColor();
         ctx.fillText(`#${playerRank}`, x, y);
+        const paddingTop = 60;
+        const paddingRight = 60;
+        const x = canvas.width - paddingRight;
+        const y = paddingTop;
     }
 }
 
-function drawFullTopPlayersList() {
+function drawTopPlayersList() {
     ctx.font = "16px 'Press Start 2P'";
     ctx.fillStyle = ColorScheme.getTextColor();
     ctx.textAlign = 'right';
@@ -2421,7 +2408,4 @@ function getPlayerRank() {
 
 function initializeTopPlayers() {
     topPlayers = JSON.parse(localStorage.getItem('topPlayers')) || [];
-    //console.log("Initialized top players:", topPlayers);
 }
-
-initializeTopPlayers();
