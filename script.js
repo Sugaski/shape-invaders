@@ -345,9 +345,9 @@ function handleTouchEnd(stickType) {
 
 const menuScreen = document.getElementById('menuScreen');
 const gameCanvas = document.getElementById('gameCanvas');
-const MOBILE_ENEMY_SPEED_MULTIPLIER = 0.6;
-const MOBILE_STAGE_ONE_BOSS_SPEED_MULTIPLIER = 0.7;
-const MOBILE_BIG_BOSS_PROJECTILE_SPEED_MULTIPLIER = 0.5;
+const MOBILE_ENEMY_SPEED_MULTIPLIER = 0.4;
+const MOBILE_STAGE_ONE_BOSS_SPEED_MULTIPLIER = 0.5;
+const MOBILE_BIG_BOSS_PROJECTILE_SPEED_MULTIPLIER = 0.4;
 const MOBILE_SPEED_MULTIPLIER = 1;
 const MOBILE_SCALE_FACTOR = 0.8;
 const BIG_BOSS_SPAWN_INTERVAL = 5; 
