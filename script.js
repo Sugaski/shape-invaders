@@ -292,86 +292,82 @@ function initMobileControls() {
     const aimStickKnob = document.getElementById('aimStickKnob');
 
     // Move stick touch events
-    moveStick.addEventListener('touchstart', (e) => handleTouchStart(e, 'move'));
-    moveStick.addEventListener('touchmove', (e) => handleTouchMove(e, 'move'));
-    moveStick.addEventListener('touchend', () => handleTouchEnd('move'));
+    moveStick.addEventListener('touchstart', (e) => handleTouchStart(e, 'move'), { passive: false });
+    moveStick.addEventListener('touchmove', (e) => handleTouchMove(e, 'move'), { passive: false });
+    moveStick.addEventListener('touchend', () => handleTouchEnd('move'), { passive: false });
 
     // Aim stick touch events
-    aimStick.addEventListener('touchstart', (e) => handleTouchStart(e, 'aim'));
-    aimStick.addEventListener('touchmove', (e) => handleTouchMove(e, 'aim'));
-    aimStick.addEventListener('touchend', () => handleTouchEnd('aim'));
+    aimStick.addEventListener('touchstart', (e) => handleTouchStart(e, 'aim'), { passive: false });
+    aimStick.addEventListener('touchmove', (e) => handleTouchMove(e, 'aim'), { passive: false });
+    aimStick.addEventListener('touchend', () => handleTouchEnd('aim'), { passive: false });
 }
-    function handleTouchStart(e, stickType) {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const stick = stickType === 'move' ? moveStick : aimStick;
-        const rect = stick.getBoundingClientRect();
 
-        if (stickType === 'move') {
-            moveStickActive = true;
-            moveStickStartX = touch.clientX - rect.left;
-            moveStickStartY = touch.clientY - rect.top;
-        } else {
-            aimStickActive = true;
-            aimStickStartX = touch.clientX - rect.left;
-            aimStickStartY = touch.clientY - rect.top;
-        }
+function handleTouchStart(e, stickType) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const stick = document.getElementById(`${stickType}Stick`);
+    const rect = stick.getBoundingClientRect();
+
+    if (stickType === 'move') {
+        moveStickActive = true;
+        moveStickStartX = touch.clientX - rect.left;
+        moveStickStartY = touch.clientY - rect.top;
+    } else {
+        aimStickActive = true;
+        aimStickStartX = touch.clientX - rect.left;
+        aimStickStartY = touch.clientY - rect.top;
+    }
+}
+
+function handleTouchMove(e, stickType) {
+    e.preventDefault();
+    if ((stickType === 'move' && !moveStickActive) || (stickType === 'aim' && !aimStickActive)) return;
+
+    const touch = e.touches[0];
+    const stick = document.getElementById(`${stickType}Stick`);
+    const knob = document.getElementById(`${stickType}StickKnob`);
+    const rect = stick.getBoundingClientRect();
+
+    let deltaX, deltaY;
+    if (stickType === 'move') {
+        deltaX = touch.clientX - rect.left - moveStickStartX;
+        deltaY = touch.clientY - rect.top - moveStickStartY;
+    } else {
+        deltaX = touch.clientX - rect.left - aimStickStartX;
+        deltaY = touch.clientY - rect.top - aimStickStartY;
     }
 
-    function handleTouchMove(e, stickType) {
-        e.preventDefault();
-        if ((stickType === 'move' && !moveStickActive) || (stickType === 'aim' && !aimStickActive)) return;
+    const stickRadius = stick.offsetWidth / 2;
+    const distance = Math.min(stickRadius, Math.sqrt(deltaX * deltaX + deltaY * deltaY));
+    const angle = Math.atan2(deltaY, deltaX);
 
-        const touch = e.touches[0];
-        const stick = stickType === 'move' ? moveStick : aimStick;
-        const knob = stickType === 'move' ? moveStickKnob : aimStickKnob;
-        const rect = stick.getBoundingClientRect();
+    const knobX = distance * Math.cos(angle);
+    const knobY = distance * Math.sin(angle);
 
-        let deltaX, deltaY;
-        if (stickType === 'move') {
-            deltaX = touch.clientX - rect.left - moveStickStartX;
-            deltaY = touch.clientY - rect.top - moveStickStartY;
-        } else {
-            deltaX = touch.clientX - rect.left - aimStickStartX;
-            deltaY = touch.clientY - rect.top - aimStickStartY;
-        }
+    knob.style.transform = `translate(${knobX}px, ${knobY}px)`;
 
-        const stickRadius = stick.offsetWidth / 2;
-        const distance = Math.min(stickRadius, Math.sqrt(deltaX * deltaX + deltaY * deltaY));
-        const angle = Math.atan2(deltaY, deltaX);
-
-        const knobX = distance * Math.cos(angle);
-        const knobY = distance * Math.sin(angle);
-
-        knob.style.transform = `translate(${knobX}px, ${knobY}px)`;
-
-        if (stickType === 'move') {
-            player.vx = (knobX / stickRadius) * player.speed;
-            player.vy = (knobY / stickRadius) * player.speed;
-        } else {
-            const aimAngle = Math.atan2(knobY, knobX);
-            player.angle = aimAngle;
-            if (distance > 0) {
-                player.isShooting = true;
-            } else {
-                player.isShooting = false;
-            }
-        }
+    if (stickType === 'move') {
+        player.dx = (knobX / stickRadius) * player.speed;
+        player.dy = (knobY / stickRadius) * player.speed;
+    } else {
+        player.angle = angle;
+        player.isShooting = distance > 0;
     }
+}
 
-    function handleTouchEnd(stickType) {
-        const knob = stickType === 'move' ? moveStickKnob : aimStickKnob;
-        knob.style.transform = 'translate(0px, 0px)';
+function handleTouchEnd(stickType) {
+    const knob = document.getElementById(`${stickType}StickKnob`);
+    knob.style.transform = 'translate(0px, 0px)';
 
-        if (stickType === 'move') {
-            moveStickActive = false;
-            player.vx = 0;
-            player.vy = 0;
-        } else {
-            aimStickActive = false;
-            player.isShooting = false;
-        }
+    if (stickType === 'move') {
+        moveStickActive = false;
+        player.dx = 0;
+        player.dy = 0;
+    } else {
+        aimStickActive = false;
+        player.isShooting = false;
     }
+}
 
 
 const menuScreen = document.getElementById('menuScreen');
@@ -1430,14 +1426,9 @@ function movePlayer(currentTime) {
     const speedMultiplier = player.hasBarrier ? BARRIER_SPEED_MULTIPLIER : 1;
 
     if (isMobile()) {
-        if (moveStickActive) {
-            const speed = player.speed * speedMultiplier * moveStickDistance;
-            player.dx = Math.cos(moveStickAngle) * speed;
-            player.dy = Math.sin(moveStickAngle) * speed;
-        } else {
-            player.dx = 0;
-            player.dy = 0;
-        }
+        // Use the values set by the mobile controls
+        player.x += player.dx * deltaTime * speedMultiplier;
+        player.y += player.dy * deltaTime * speedMultiplier;
     } else {
         // Desktop controls remain unchanged
         if (keys.ArrowLeft || keys.a) player.dx = -player.speed * speedMultiplier;
@@ -1447,10 +1438,10 @@ function movePlayer(currentTime) {
         if (keys.ArrowUp || keys.w) player.dy = -player.speed * speedMultiplier;
         else if (keys.ArrowDown || keys.s) player.dy = player.speed * speedMultiplier;
         else player.dy = 0;
-    }
 
-    player.x += player.dx * deltaTime;
-    player.y += player.dy * deltaTime;
+        player.x += player.dx * deltaTime;
+        player.y += player.dy * deltaTime;
+    }
 
     // Ensure player stays within canvas boundaries
     player.x = Math.max(player.size / 2, Math.min(canvas.width - player.size / 2, player.x));
