@@ -1588,8 +1588,18 @@ function checkCollisions() {
         
         for (let i = enemies.length - 1; i >= 0; i--) {
             const enemy = enemies[i];
+            if (!enemy) {
+                console.log(`Enemy at index ${i} is undefined`);
+                continue;
+            }
+            
             for (let j = bullets.length - 1; j >= 0; j--) {
                 const bullet = bullets[j];
+                if (!bullet) {
+                    console.log(`Bullet at index ${j} is undefined`);
+                    continue;
+                }
+                
                 if (bullet.isLaser) {
                     // Only process laser if it's still active
                     if (currentTime - bullet.creationTime < bullet.duration) {
@@ -1643,6 +1653,7 @@ function checkCollisions() {
         }
     } catch (error) {
         console.error("Error in checkCollisions:", error);
+        console.log("Current game state:", { enemies, bullets });
     }
 
     if (bigBoss) {
