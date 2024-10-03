@@ -2377,7 +2377,10 @@ function drawPlayerRank() {
         ctx.fillStyle = ColorScheme.getTextColor();
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+
         // Define padding from the top and right edges
+        ctx.fillStyle = ColorScheme.getTextColor();
+        ctx.fillText(`#${playerRank}`, x, y);
         const paddingTop = 60;
         const paddingRight = 60;
 
