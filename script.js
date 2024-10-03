@@ -85,32 +85,6 @@ function isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-function initializeMobileControls() {
-    const mobileEscapeButton = document.getElementById('mobileEscapeButton');
-    const moveStick = document.getElementById('moveStick');
-    const aimStick = document.getElementById('aimStick');
-    const moveStickKnob = document.getElementById('moveStickKnob');
-    const aimStickKnob = document.getElementById('aimStickKnob');
-
-    moveStick.addEventListener('touchstart', (e) => handleStickStart(e, 'move'));
-    moveStick.addEventListener('touchmove', (e) => handleStickMove(e, 'move'));
-    moveStick.addEventListener('touchend', () => handleStickEnd('move'));
-
-    aimStick.addEventListener('touchstart', (e) => handleStickStart(e, 'aim'));
-    aimStick.addEventListener('touchmove', (e) => handleStickMove(e, 'aim'));
-    aimStick.addEventListener('touchend', () => handleStickEnd('aim'));
-    
-    if (mobileEscapeButton) {
-        mobileEscapeButton.addEventListener('click', () => {
-            if (isGameRunning) {
-                togglePause();
-            } else if (document.getElementById('settingsMenu').style.display === 'block') {
-                hideSettings();
-            }
-        });
-    }
-}
-
 function handleStickStart(e, stickType) {
     e.preventDefault();
     if (stickType === 'move') {
@@ -161,24 +135,6 @@ function handleStickEnd(stickType) {
     } else {
         aimStickActive = false;
     }
-}
-
-function createMobileControls() {
-    const mobileControls = document.getElementById('mobileControls');
-    mobileControls.style.display = 'flex';
-
-    const moveStick = document.getElementById('moveStick');
-    const aimStick = document.getElementById('aimStick');
-
-    moveStick.addEventListener('touchstart', handleMoveStickStart, { passive: false });
-    moveStick.addEventListener('touchmove', handleMoveStickMove, { passive: false });
-    moveStick.addEventListener('touchend', handleMoveStickEnd, { passive: false });
-
-    aimStick.addEventListener('touchstart', handleAimStickStart, { passive: false });
-    aimStick.addEventListener('touchmove', handleAimStickMove, { passive: false });
-    aimStick.addEventListener('touchend', handleAimStickEnd, { passive: false });
-
-    updateMobileControlsColor();
 }
 
 function handleMoveStickStart(e) {
@@ -286,10 +242,14 @@ function hideMobileControls() {
 }
 
 function initMobileControls() {
+    const mobileControls = document.getElementById('mobileControls');
     const moveStick = document.getElementById('moveStick');
     const aimStick = document.getElementById('aimStick');
     const moveStickKnob = document.getElementById('moveStickKnob');
     const aimStickKnob = document.getElementById('aimStickKnob');
+    const mobileEscapeButton = document.getElementById('mobileEscapeButton');
+
+    mobileControls.style.display = 'flex';
 
     // Move stick touch events
     moveStick.addEventListener('touchstart', (e) => handleTouchStart(e, 'move'), { passive: false });
@@ -300,6 +260,22 @@ function initMobileControls() {
     aimStick.addEventListener('touchstart', (e) => handleTouchStart(e, 'aim'), { passive: false });
     aimStick.addEventListener('touchmove', (e) => handleTouchMove(e, 'aim'), { passive: false });
     aimStick.addEventListener('touchend', () => handleTouchEnd('aim'), { passive: false });
+
+    // Escape button functionality
+    if (mobileEscapeButton) {
+        mobileEscapeButton.addEventListener('touchstart', handleMobileEscape, { passive: false });
+    }
+
+    updateMobileControlsColor();
+}
+
+function handleMobileEscape(e) {
+    e.preventDefault();
+    if (isGameRunning) {
+        togglePause();
+    } else if (document.getElementById('settingsMenu').style.display === 'block') {
+        hideSettings();
+    }
 }
 
 function handleTouchStart(e, stickType) {
@@ -819,8 +795,7 @@ document.getElementById('colorblindMode').addEventListener('change', function() 
 
 window.addEventListener('load', () => {
     if (isMobile()) {
-        createMobileControls();
-        initializeMobileControls();
+        initMobileControls();
     }
     initializeMenu();
     loadSettings();
@@ -2339,9 +2314,7 @@ function startGame() {
         cancelAnimationFrame(animationFrameId);
     }
     if (isMobile()) {
-        showMobileControls();
         initMobileControls();
-        initializeMobileControls();
     }
     loadSettings();
     updateMobileControlsColor();
