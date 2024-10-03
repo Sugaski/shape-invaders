@@ -353,10 +353,10 @@ const MOBILE_SCALE_FACTOR = 0.8;
 const BIG_BOSS_SPAWN_INTERVAL = 5; 
 const STAGE_ONE_BOSS_SPAWN_INTERVAL = 500; // Spawn stage-one boss every 500 points
 const INITIAL_ENEMY_SPAWN_CHANCE = 0.02;
-const fireInterval = 200;
+const fireInterval = 225;
 const POWERUP_DURATION = 15000; //15 seconds
 const POWERUP_FLASH_DURATION = 5000;
-const BARRIER_SPEED_MULTIPLIER = 3.5;
+const BARRIER_SPEED_MULTIPLIER = 3.0;
 const MAX_ENEMIES = 15;
 const player = {
     x: canvas.width / 2,
