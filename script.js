@@ -2374,14 +2374,23 @@ function drawPlayerRank() {
     const playerRank = getPlayerRank();
     if (playerRank > 0) {
         ctx.font = "36px 'Press Start 2P'";
+        ctx.fillStyle = ColorScheme.getTextColor();
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+
+        // Define padding from the top and right edges
         ctx.fillStyle = ColorScheme.getTextColor();
         ctx.fillText(`#${playerRank}`, x, y);
         const paddingTop = 60;
         const paddingRight = 60;
+
+        // Calculate position
         const x = canvas.width - paddingRight;
         const y = paddingTop;
+
+        // Draw the rank text
+        ctx.fillStyle = ColorScheme.getTextColor();
+        ctx.fillText(`#${playerRank}`, x, y);
     }
 }
 
