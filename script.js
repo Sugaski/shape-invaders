@@ -1812,10 +1812,8 @@ function gameLoop(currentTime) {
     }
 
     if (isMobile()) {
-        if (aimStickActive) {
-            player.angle = aimStickAngle;
-        }
-    }   
+        player.angle = aimStickAngle;
+    }    
 
     if (!isPaused) {
         updateColors(); // Add this line at the beginning of the game loop
