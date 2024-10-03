@@ -1349,7 +1349,7 @@ function drawScore() {
     ctx.fillText(`Lives: ${lives}`, 10, 90);
 }
 
-function drawTopPlayers() {
+function drawTopPlayersList() {
     ctx.font = "16px 'Press Start 2P'";
     ctx.fillStyle = ColorScheme.getTextColor();
     ctx.textAlign = 'right';
@@ -1359,7 +1359,55 @@ function drawTopPlayers() {
         const player = topPlayers[i] || { name: '---', score: 0 };
         ctx.fillText(`${i + 1}. ${player.name}: ${player.score}`, canvas.width - 10, 60 + i * 25);
     }
-    //console.log("Drawing top players:", topPlayers); // For debugging
+}
+
+function drawPlayerRank() {
+    const playerRank = getPlayerRank();
+    if (playerRank > 0 && playerRank <= 5) {
+        ctx.font = "36px 'Press Start 2P'";
+        ctx.fillStyle = ColorScheme.getTextColor();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        const paddingTop = 60;
+        const paddingRight = 60;
+
+        const x = canvas.width - paddingRight;
+        const y = paddingTop;
+
+        ctx.fillText(`#${playerRank}`, x, y);
+    }
+}
+
+function getPlayerRank() {
+    const playerScore = score;
+    const playerName = player.name;
+    const allPlayers = [...topPlayers, { name: playerName, score: playerScore }];
+    allPlayers.sort((a, b) => b.score - a.score);
+    const rank = allPlayers.findIndex(p => p.name === playerName && p.score === playerScore) + 1;
+    return rank;
+}
+
+function updateTopPlayers() {
+    if (!player.name) {
+        return;
+    }
+
+    const newScore = { name: player.name, score: score };
+    const existingPlayerIndex = topPlayers.findIndex(p => p.name === player.name);
+
+    if (existingPlayerIndex !== -1) {
+        if (score > topPlayers[existingPlayerIndex].score) {
+            topPlayers[existingPlayerIndex].score = score;
+        }
+    } else {
+        topPlayers.push(newScore);
+    }
+
+    topPlayers.sort((a, b) => b.score - a.score);
+    topPlayers = topPlayers.slice(0, 5);
+
+    localStorage.setItem('topPlayers', JSON.stringify(topPlayers));
 }
 
 function drawBossCounters() {
@@ -1923,6 +1971,13 @@ function gameLoop(currentTime) {
                 updateTopPlayers();
             }
 
+            // Draw top players list or player rank based on device
+            if (isMobile()) {
+                drawPlayerRank();
+            } else {
+                drawTopPlayersList();
+            }
+
             updateTopPlayers();    
             drawTopPlayers();
 
@@ -2362,34 +2417,20 @@ function resetAfterBigBoss() {
     spawnStageOneBoss(); 
 }
 
-function drawTopPlayers() {
-    if (isMobile()) {
-        drawPlayerRank();
-    } else {
-        drawTopPlayersList();
-    }
-}
-
 function drawPlayerRank() {
     const playerRank = getPlayerRank();
-    if (playerRank > 0) {
+    if (playerRank > 0 && playerRank <= 5) {
         ctx.font = "36px 'Press Start 2P'";
         ctx.fillStyle = ColorScheme.getTextColor();
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        // Define padding from the top and right edges
-        ctx.fillStyle = ColorScheme.getTextColor();
-        ctx.fillText(`#${playerRank}`, x, y);
         const paddingTop = 60;
         const paddingRight = 60;
 
-        // Calculate position
         const x = canvas.width - paddingRight;
         const y = paddingTop;
 
-        // Draw the rank text
-        ctx.fillStyle = ColorScheme.getTextColor();
         ctx.fillText(`#${playerRank}`, x, y);
     }
 }
@@ -2412,9 +2453,18 @@ function getPlayerRank() {
     const allPlayers = [...topPlayers, { name: playerName, score: playerScore }];
     allPlayers.sort((a, b) => b.score - a.score);
     const rank = allPlayers.findIndex(p => p.name === playerName && p.score === playerScore) + 1;
-    return rank <= 5 ? rank : 0;
+    return rank;
 }
 
 function initializeTopPlayers() {
     topPlayers = JSON.parse(localStorage.getItem('topPlayers')) || [];
+    //console.log("Initialized top players:", topPlayers);
+}
+
+function drawTopPlayers() {
+    if (isMobile()) {
+        drawPlayerRank();
+    } else {
+        drawTopPlayersList();
+    }
 }
