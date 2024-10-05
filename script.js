@@ -83,59 +83,7 @@ window.addEventListener('resize', () => {
 
 function isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
-
-function handleStickStart(e, stickType) {
-    e.preventDefault();
-    if (stickType === 'move') {
-        moveStickActive = true;
-    } else {
-        aimStickActive = true;
-    }
-}
-
-function handleStickMove(e, stickType) {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const stick = document.getElementById(`${stickType}Stick`);
-    const knob = document.getElementById(`${stickType}StickKnob`);
-    const rect = stick.getBoundingClientRect();
-    
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    
-    let dx = touch.clientX - centerX;
-    let dy = touch.clientY - centerY;
-    
-    const distance = Math.min(Math.sqrt(dx * dx + dy * dy), rect.width / 2);
-    const angle = Math.atan2(dy, dx);
-    
-    const knobX = Math.cos(angle) * distance;
-    const knobY = Math.sin(angle) * distance;
-    
-    knob.style.transform = `translate(${knobX}px, ${knobY}px)`;
-    
-    if (stickType === 'move') {
-        moveStickAngle = angle;
-        moveStickDistance = distance / (rect.width / 2);
-    } else {
-        aimStickAngle = angle;
-        aimStickDistance = distance / (rect.width / 2);
-        player.angle = angle;
-    }
-}
-
-function handleStickEnd(stickType) {
-    const knob = document.getElementById(`${stickType}StickKnob`);
-    knob.style.transform = 'translate(0px, 0px)';
-    
-    if (stickType === 'move') {
-        moveStickActive = false;
-        moveStickDistance = 0;
-    } else {
-        aimStickActive = false;
-    }
-}
+} 
 
 function handleMoveStickStart(e) {
     e.preventDefault();
@@ -241,6 +189,11 @@ function hideMobileControls() {
     }
 }
 
+// Add these variables at the top of your script, with other global variables
+let moveStickActive = false;
+let aimStickActive = false;
+
+// Replace the existing initMobileControls function with this simplified version
 function initMobileControls() {
     const mobileControls = document.getElementById('mobileControls');
     const moveStick = document.getElementById('moveStick');
@@ -250,14 +203,14 @@ function initMobileControls() {
     mobileControls.style.display = 'flex';
 
     // Move stick touch events
-    moveStick.addEventListener('touchstart', handleMoveStickStart, { passive: false });
-    moveStick.addEventListener('touchmove', handleMoveStickMove, { passive: false });
-    moveStick.addEventListener('touchend', handleMoveStickEnd, { passive: false });
+    moveStick.addEventListener('touchstart', (e) => handleStickStart(e, 'move'), { passive: false });
+    moveStick.addEventListener('touchmove', (e) => handleStickMove(e, 'move'), { passive: false });
+    moveStick.addEventListener('touchend', () => handleStickEnd('move'), { passive: false });
 
     // Aim stick touch events
-    aimStick.addEventListener('touchstart', handleAimStickStart, { passive: false });
-    aimStick.addEventListener('touchmove', handleAimStickMove, { passive: false });
-    aimStick.addEventListener('touchend', handleAimStickEnd, { passive: false });
+    aimStick.addEventListener('touchstart', (e) => handleStickStart(e, 'aim'), { passive: false });
+    aimStick.addEventListener('touchmove', (e) => handleStickMove(e, 'aim'), { passive: false });
+    aimStick.addEventListener('touchend', () => handleStickEnd('aim'), { passive: false });
 
     // Escape button functionality
     if (mobileEscapeButton) {
@@ -265,6 +218,49 @@ function initMobileControls() {
     }
 
     updateMobileControlsColor();
+}
+
+// Add these new functions to handle stick events
+function handleStickStart(e, stickType) {
+    e.preventDefault();
+    if (stickType === 'move') {
+        moveStickActive = true;
+    } else if (stickType === 'aim') {
+        aimStickActive = true;
+    }
+    handleStickMove(e, stickType);
+}
+
+function handleStickMove(e, stickType) {
+    e.preventDefault();
+    if ((stickType === 'move' && !moveStickActive) || (stickType === 'aim' && !aimStickActive)) return;
+
+    const touch = e.touches[0];
+    const stick = document.getElementById(`${stickType}Stick`);
+    const knob = document.getElementById(`${stickType}StickKnob`);
+    const { angle, distance } = updateStickPosition(touch, stick, knob);
+
+    if (stickType === 'move') {
+        const speed = distance / (stick.offsetWidth / 2) * player.speed;
+        player.dx = Math.cos(angle) * speed;
+        player.dy = Math.sin(angle) * speed;
+    } else {
+        player.angle = angle;
+        player.isShooting = distance > 0;
+    }
+}
+
+function handleStickEnd(stickType) {
+    if (stickType === 'move') {
+        moveStickActive = false;
+        player.dx = 0;
+        player.dy = 0;
+    } else {
+        aimStickActive = false;
+        player.isShooting = false;
+    }
+    const knob = document.getElementById(`${stickType}StickKnob`);
+    knob.style.transform = 'translate(0px, 0px)';
 }
 
 function handleMobileEscape(e) {
@@ -405,12 +401,6 @@ const ColorScheme = {
 
 let currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
 let lastMousePosition = { x: 0, y: 0 };
-let moveStickActive = false;
-let aimStickActive = false;
-let moveStickAngle = 0;
-let moveStickDistance = 0;
-let aimStickAngle = 0;
-let aimStickDistance = 0;
 let aimAngle = 0;
 let bullets = [];
 let enemies = [];
