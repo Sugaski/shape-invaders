@@ -245,21 +245,19 @@ function initMobileControls() {
     const mobileControls = document.getElementById('mobileControls');
     const moveStick = document.getElementById('moveStick');
     const aimStick = document.getElementById('aimStick');
-    const moveStickKnob = document.getElementById('moveStickKnob');
-    const aimStickKnob = document.getElementById('aimStickKnob');
     const mobileEscapeButton = document.getElementById('mobileEscapeButton');
 
     mobileControls.style.display = 'flex';
 
     // Move stick touch events
-    moveStick.addEventListener('touchstart', (e) => handleTouchStart(e, 'move'), { passive: false });
-    moveStick.addEventListener('touchmove', (e) => handleTouchMove(e, 'move'), { passive: false });
-    moveStick.addEventListener('touchend', () => handleTouchEnd('move'), { passive: false });
+    moveStick.addEventListener('touchstart', handleMoveStickStart, { passive: false });
+    moveStick.addEventListener('touchmove', handleMoveStickMove, { passive: false });
+    moveStick.addEventListener('touchend', handleMoveStickEnd, { passive: false });
 
     // Aim stick touch events
-    aimStick.addEventListener('touchstart', (e) => handleTouchStart(e, 'aim'), { passive: false });
-    aimStick.addEventListener('touchmove', (e) => handleTouchMove(e, 'aim'), { passive: false });
-    aimStick.addEventListener('touchend', () => handleTouchEnd('aim'), { passive: false });
+    aimStick.addEventListener('touchstart', handleAimStickStart, { passive: false });
+    aimStick.addEventListener('touchmove', handleAimStickMove, { passive: false });
+    aimStick.addEventListener('touchend', handleAimStickEnd, { passive: false });
 
     // Escape button functionality
     if (mobileEscapeButton) {
