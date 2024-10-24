@@ -12,6 +12,8 @@ function resizeCanvas() {
     updateGameElementsSize();
 }
 
+let bigBoss = null;
+
 function updateGameElementsSize() {
     const scaleFactor = isMobile() ? MOBILE_SCALE_FACTOR : 1;
     player.size = isMobile() ? 35 * scaleFactor : 30; // Update player size for both mobile and desktop
