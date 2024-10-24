@@ -2443,3 +2443,4 @@ function drawTopPlayers() {
         drawTopPlayersList();
     }
 }
+}
