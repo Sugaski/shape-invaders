@@ -488,6 +488,20 @@ function hideMenu() {
     //console.log("Menu hidden. isPaused:", isPaused);
 }
 
+function startNewGame() {
+    console.log("Starting new game...");
+    resetPlayerPosition();
+    showNamePrompt()
+        .then(name => {
+            if (name) {
+                player.name = name;
+                resetGame();
+                resizeCanvas();
+                startGame();
+            } 
+        })
+}
+
 function initializeMenu() {
     document.getElementById('newGame').addEventListener('click', startNewGame);
 
@@ -2321,20 +2335,6 @@ function handleGameOverKeyPress(e) {
         window.removeEventListener('keydown', handleGameOverKeyPress);
         startNewGame();
     }
-}
-
-function startNewGame() {
-    //console.log("Starting new game...");
-    resetPlayerPosition();
-    showNamePrompt()
-        .then(name => {
-            if (name) {
-                player.name = name;
-                resetGame();
-                resizeCanvas();
-                startGame();
-            } 
-        })
 }
 
 function startGame() {
