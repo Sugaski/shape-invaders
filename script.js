@@ -345,7 +345,7 @@ const MOBILE_BIG_BOSS_PROJECTILE_SPEED_MULTIPLIER = 0.4;
 const MOBILE_SPEED_MULTIPLIER = 1;
 const MOBILE_SCALE_FACTOR = 0.8;
 const BIG_BOSS_SPAWN_INTERVAL = 5; 
-const STAGE_ONE_BOSS_SPAWN_INTERVAL = 500; // Spawn stage-one boss every 500 points
+const STAGE_ONE_BOSS_SPAWN_INTERVAL = 50; // Spawn stage-one boss every 500 points
 const INITIAL_ENEMY_SPAWN_CHANCE = 0.02;
 const fireInterval = 225;
 const POWERUP_DURATION = 15000; //15 seconds
@@ -1062,25 +1062,58 @@ function checkPowerupCollisions() {
 }
 
 function activatePowerup(type) {
-    currentPowerup = type;
-    powerupEndTime = Date.now() + POWERUP_DURATION;
-    if (type === 3) {
-        //console.log("Honing Missiles powerup activated");
-    } else if (type === 4) {
-        //console.log("Barrier powerup activated");
-        player.hasBarrier = true;
+    if (!bigBoss) {
+        // Deactivate current powerup if any
+        if (currentPowerup) {
+            deactivatePowerup(currentPowerup);
+        }
+        currentPowerup = type;
+        powerupEndTime = Date.now() + POWERUP_DURATION;
+        if (type === 4) {
+            player.hasBarrier = true;
+        }
+        //console.log(`Powerup ${type} activated`);
+    } else {
+        //console.log("Powerup not activated due to active big boss");
     }
 }
 
+function deactivatePowerup(type) {
+    if (type === 4) {
+        player.hasBarrier = false;
+    }
+    currentPowerup = null;
+    powerupEndTime = 0;
+}
+
 function updatePowerup() {
-    if (!bigBoss && currentPowerup) {
+    if (bigBoss) {
+        if (currentPowerup) {
+            pausePowerup();
+        }
+    } else if (currentPowerup) {
         const currentTime = Date.now();
         if (currentTime > powerupEndTime) {
-            if (currentPowerup === 4) {
-                player.hasBarrier = false;
-            }
-            currentPowerup = null;
+            deactivatePowerup(currentPowerup);
         }
+    }
+}
+
+function pausePowerup() {
+    if (currentPowerup) {
+        pausedPowerup = {
+            type: currentPowerup,
+            remainingTime: powerupEndTime - Date.now()
+        };
+        deactivatePowerup(currentPowerup);
+    }
+}
+
+function resumePowerup() {
+    if (pausedPowerup) {
+        activatePowerup(pausedPowerup.type);
+        powerupEndTime = Date.now() + pausedPowerup.remainingTime;
+        pausedPowerup = null;
     }
 }
 
@@ -1120,47 +1153,48 @@ function fireBullet() {
     const tipX = player.x + Math.cos(angle) * (player.size / 2);
     const tipY = player.y + Math.sin(angle) * (player.size / 2);
 
-    // Check if the barrier powerup is active
-    if (currentPowerup === 4 && player.hasBarrier) {
-        return; // Don't fire bullets if the barrier is active
-    }
-    
-    if (currentPowerup === 1) {
-        for (let i = -1; i <= 1; i++) {
-            const spreadAngle = angle + i * 0.2;
+    let bulletProps = {
+        x: tipX,
+        y: tipY,
+        dx: Math.cos(angle) * speed,
+        dy: Math.sin(angle) * speed,
+        isPowerup: true
+    };
+
+    switch (currentPowerup) {
+        case 1: // Spread shot
+            for (let i = -1; i <= 1; i++) {
+                const spreadAngle = angle + i * 0.2;
+                bullets.push({
+                    ...bulletProps,
+                    dx: Math.cos(spreadAngle) * speed,
+                    dy: Math.sin(spreadAngle) * speed
+                });
+            }
+            break;
+        case 2: // Laser
             bullets.push({
-                x: tipX,
-                y: tipY,
-                dx: Math.cos(spreadAngle) * speed,
-                dy: Math.sin(spreadAngle) * speed
+                ...bulletProps,
+                isLaser: true,
+                length: Math.max(canvas.width, canvas.height) * 2,
+                creationTime: Date.now(),
+                duration: 3000 // 3 seconds in milliseconds
             });
-        }
-    } else if (currentPowerup === 2) {
-        bullets.push({
-            x: tipX,
-            y: tipY,
-            dx: Math.cos(angle) * speed,
-            dy: Math.sin(angle) * speed,
-            isLaser: true,
-            length: Math.max(canvas.width, canvas.height) * 2,
-            creationTime: Date.now(),
-            duration: 3000 // 3 seconds in milliseconds
-        });
-    } else if (currentPowerup === 3) {
-        bullets.push({
-            x: tipX,
-            y: tipY,
-            dx: Math.cos(angle) * speed,
-            dy: Math.sin(angle) * speed,
-            isHoning: true
-        });
-    } else {
-        bullets.push({
-            x: tipX,
-            y: tipY,
-            dx: Math.cos(angle) * speed,
-            dy: Math.sin(angle) * speed
-        });
+            break;
+        case 3: // Homing missiles
+            bullets.push({
+                ...bulletProps,
+                isHoning: true
+            });
+            break;
+        case 4: // Barrier
+            // No bullets for barrier, it's a defensive powerup
+            break;
+        default: // Normal bullet
+            bullets.push({
+                ...bulletProps,
+                isPowerup: false
+            });
     }
 }
 
@@ -1262,8 +1296,8 @@ function drawPlayer() {
 
     ctx.restore();
 
-    // Draw barrier if active
-    if (player.hasBarrier) {
+    // Draw barrier if active and big boss is not present
+    if (player.hasBarrier && !bigBoss) {
         const currentTime = Date.now();
         const timeLeft = powerupEndTime - currentTime;
         
@@ -1430,7 +1464,7 @@ function movePlayer(currentTime) {
     lastTime = currentTime;
 
     // Calculate the speed multiplier
-    const speedMultiplier = player.hasBarrier ? BARRIER_SPEED_MULTIPLIER : 1;
+    const speedMultiplier = (player.hasBarrier && !bigBoss) ? BARRIER_SPEED_MULTIPLIER : 1;
 
     if (isMobile()) {
         // Use the values set by the mobile controls
@@ -1576,17 +1610,11 @@ function checkCollisions() {
         
         for (let i = enemies.length - 1; i >= 0; i--) {
             const enemy = enemies[i];
-            if (!enemy) {
-                console.log(`Enemy at index ${i} is undefined`);
-                continue;
-            }
+            if (!enemy) continue; // Ensure enemy is defined
             
             for (let j = bullets.length - 1; j >= 0; j--) {
                 const bullet = bullets[j];
-                if (!bullet) {
-                    console.log(`Bullet at index ${j} is undefined`);
-                    continue;
-                }
+                if (!bullet) continue; // Ensure bullet is defined
                 
                 if (bullet.isLaser) {
                     // Only process laser if it's still active
@@ -1624,6 +1652,8 @@ function checkCollisions() {
         // Check collisions with stage-one bosses
         for (let i = stageOneBosses.length - 1; i >= 0; i--) {
             const stageOneBoss = stageOneBosses[i];
+            if (!stageOneBoss) continue; // Ensure stageOneBoss is defined
+            
             const playerDx = stageOneBoss.x - player.x;
             const playerDy = stageOneBoss.y - player.y;
             const playerDistance = Math.sqrt(playerDx * playerDx + playerDy * playerDy);
@@ -2227,7 +2257,7 @@ function drawBigBoss() {
             ctx.strokeRect(bigBoss.x - healthBarWidth / 2, bigBoss.y - bigBoss.size / 2 - 20, healthBarWidth, healthBarHeight);
         }
 
-        // Draw projectiles
+        // Draw projectiles as stars
         const currentTime = Date.now();
         bigBoss.projectiles.forEach(proj => {
             ctx.save();
@@ -2243,9 +2273,17 @@ function drawBigBoss() {
 
             ctx.lineWidth = 4;
             ctx.beginPath();
-            ctx.moveTo(0, -proj.size / 2);
-            ctx.lineTo(-proj.size / 2, proj.size / 2);
-            ctx.lineTo(proj.size / 2, proj.size / 2);
+            for (let i = 0; i < 5; i++) {
+                const angle = (i * 4 * Math.PI / 5) - Math.PI / 2;
+                const outerX = Math.cos(angle) * proj.size / 2;
+                const outerY = Math.sin(angle) * proj.size / 2;
+                ctx.lineTo(outerX, outerY);
+
+                const innerAngle = angle + Math.PI / 5;
+                const innerX = Math.cos(innerAngle) * proj.size / 4;
+                const innerY = Math.sin(innerAngle) * proj.size / 4;
+                ctx.lineTo(innerX, innerY);
+            }
             ctx.closePath();
             ctx.stroke();
             ctx.restore();
