@@ -2431,11 +2431,6 @@ function getPlayerRank() {
     return rank;
 }
 
-function initializeTopPlayers() {
-    topPlayers = JSON.parse(localStorage.getItem('topPlayers')) || [];
-    //console.log("Initialized top players:", topPlayers);
-}
-
 function drawTopPlayers() {
     if (isMobile()) {
         drawPlayerRank();
