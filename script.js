@@ -1,5 +1,8 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+let bigBoss = null;
+let moveStickActive = false;
+let aimStickActive = false;
 
 function resizeCanvas() {
     if (isMobile()) {
@@ -11,8 +14,6 @@ function resizeCanvas() {
     }
     updateGameElementsSize();
 }
-
-let bigBoss = null;
 
 function updateGameElementsSize() {
     const scaleFactor = isMobile() ? MOBILE_SCALE_FACTOR : 1;
@@ -46,29 +47,24 @@ function updateGameElementsSize() {
 }
 
 function adjustGameElementsPositions() {
-    // Adjust player position
     player.x = Math.min(Math.max(player.x, player.size / 2), canvas.width - player.size / 2);
     player.y = Math.min(Math.max(player.y, player.size / 2), canvas.height - player.size / 2);
 
-    // Adjust enemies positions
     enemies.forEach(enemy => {
         enemy.x = Math.min(Math.max(enemy.x, enemy.size / 2), canvas.width - enemy.size / 2);
         enemy.y = Math.min(Math.max(enemy.y, enemy.size / 2), canvas.height - enemy.size / 2);
     });
 
-    // Adjust stage one bosses positions
     stageOneBosses.forEach(boss => {
         boss.x = Math.min(Math.max(boss.x, boss.size / 2), canvas.width - boss.size / 2);
         boss.y = Math.min(Math.max(boss.y, boss.size / 2), canvas.height - boss.size / 2);
     });
 
-    // Adjust big boss position if it exists
     if (bigBoss) {
         bigBoss.x = Math.min(Math.max(bigBoss.x, bigBoss.size / 2), canvas.width - bigBoss.size / 2);
         bigBoss.y = Math.min(Math.max(bigBoss.y, bigBoss.size / 2), canvas.height - bigBoss.size / 2);
     }
 
-    // Adjust powerups positions
     powerups.forEach(powerup => {
         powerup.x = Math.min(Math.max(powerup.x, powerup.size / 2), canvas.width - powerup.size / 2);
         powerup.y = Math.min(Math.max(powerup.y, powerup.size / 2), canvas.height - powerup.size / 2);
@@ -78,7 +74,6 @@ function adjustGameElementsPositions() {
 window.addEventListener('resize', () => {
     resizeCanvas();
     if (isGameRunning) {
-        // Adjust game elements positions if needed
         adjustGameElementsPositions();
     }
 });
@@ -191,11 +186,6 @@ function hideMobileControls() {
     }
 }
 
-// Add these variables at the top of your script, with other global variables
-let moveStickActive = false;
-let aimStickActive = false;
-
-// Replace the existing initMobileControls function with this simplified version
 function initMobileControls() {
     const mobileControls = document.getElementById('mobileControls');
     const moveStick = document.getElementById('moveStick');
@@ -204,17 +194,14 @@ function initMobileControls() {
 
     mobileControls.style.display = 'flex';
 
-    // Move stick touch events
     moveStick.addEventListener('touchstart', (e) => handleStickStart(e, 'move'), { passive: false });
     moveStick.addEventListener('touchmove', (e) => handleStickMove(e, 'move'), { passive: false });
     moveStick.addEventListener('touchend', () => handleStickEnd('move'), { passive: false });
 
-    // Aim stick touch events
     aimStick.addEventListener('touchstart', (e) => handleStickStart(e, 'aim'), { passive: false });
     aimStick.addEventListener('touchmove', (e) => handleStickMove(e, 'aim'), { passive: false });
     aimStick.addEventListener('touchend', () => handleStickEnd('aim'), { passive: false });
 
-    // Escape button functionality
     if (mobileEscapeButton) {
         mobileEscapeButton.addEventListener('touchstart', handleMobileEscape, { passive: false });
     }
@@ -222,7 +209,6 @@ function initMobileControls() {
     updateMobileControlsColor();
 }
 
-// Add these new functions to handle stick events
 function handleStickStart(e, stickType) {
     e.preventDefault();
     if (stickType === 'move') {
@@ -347,17 +333,17 @@ const MOBILE_BIG_BOSS_PROJECTILE_SPEED_MULTIPLIER = 0.4;
 const MOBILE_SPEED_MULTIPLIER = 1;
 const MOBILE_SCALE_FACTOR = 0.8;
 const BIG_BOSS_SPAWN_INTERVAL = 5; 
-const STAGE_ONE_BOSS_SPAWN_INTERVAL = 500; // Spawn stage-one boss every 500 points
+const STAGE_ONE_BOSS_SPAWN_INTERVAL = 500;
 const INITIAL_ENEMY_SPAWN_CHANCE = 0.02;
 const fireInterval = 225;
-const POWERUP_DURATION = 15000; //15 seconds
+const POWERUP_DURATION = 15000;
 const POWERUP_FLASH_DURATION = 5000;
 const BARRIER_SPEED_MULTIPLIER = 3.0;
 const MAX_ENEMIES = 15;
 const player = {
     x: canvas.width / 2,
     y: canvas.height / 2,
-    size: isMobile() ? 35 * MOBILE_SCALE_FACTOR : 30, // This will be updated in updateGameElementsSize
+    size: isMobile() ? 35 * MOBILE_SCALE_FACTOR : 30,
     speed: 300,
     dx: 0,
     dy: 0,
@@ -818,7 +804,7 @@ function resetGame() {
 }
 
 function gameOver() {
-    if (!isGameRunning) return; // Prevent multiple calls
+    if (!isGameRunning) return;
     console.log("Game Over function called");
     isGameRunning = false;
     isPaused = true;
@@ -847,7 +833,6 @@ function spawnStageOneBoss() {
     if (!bigBoss && score > 0 && score % spawnInterval === 0 && stageOneBosses.length === 0) {
         let x, y;
         
-        // Determine which side of the screen to spawn on
         const side = Math.floor(Math.random() * 4);
         
         switch(side) {
@@ -869,7 +854,6 @@ function spawnStageOneBoss() {
                 break;
         }
 
-        // Calculate initial velocity towards the center of the screen
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         const angle = Math.atan2(centerY - y, centerX - x);
@@ -929,7 +913,6 @@ function moveStageOneBosses() {
         boss.x += boss.dx;
         boss.y += boss.dy;
         
-        // Bounce off screen edges, but allow entering from off-screen
         if ((boss.x <= boss.size / 2 && boss.dx < 0) || (boss.x >= canvas.width - boss.size / 2 && boss.dx > 0)) {
             boss.dx *= -1;
         }
@@ -937,13 +920,11 @@ function moveStageOneBosses() {
             boss.dy *= -1;
         }
 
-        // Optional: Gradually move towards the center of the screen
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         boss.dx += (centerX - boss.x) * 0.0001;
         boss.dy += (centerY - boss.y) * 0.0001;
 
-        // Limit maximum speed
         const maxSpeed = 5;
         const speed = Math.sqrt(boss.dx * boss.dx + boss.dy * boss.dy);
         if (speed > maxSpeed) {
@@ -1150,8 +1131,6 @@ function chainReaction(x, y) {
 function fireBullet() {
     const angle = player.angle;
     const speed = 10;
-    
-    // Calculate the position of the triangle's tip
     const tipX = player.x + Math.cos(angle) * (player.size / 2);
     const tipY = player.y + Math.sin(angle) * (player.size / 2);
 
@@ -1180,7 +1159,7 @@ function fireBullet() {
                 isLaser: true,
                 length: Math.max(canvas.width, canvas.height) * 2,
                 creationTime: Date.now(),
-                duration: 3000 // 3 seconds in milliseconds
+                duration: 3000
             });
             break;
         case 3: // Homing missiles
@@ -1190,9 +1169,8 @@ function fireBullet() {
             });
             break;
         case 4: // Barrier
-            // No bullets for barrier, it's a defensive powerup
             break;
-        default: // Normal bullet
+        default:
             bullets.push({
                 ...bulletProps,
                 isPowerup: false
@@ -1251,7 +1229,6 @@ function drawBullets() {
             ctx.lineTo(endX, endY);
             ctx.stroke();
 
-            // Add a glow effect
             ctx.shadowColor = '#ff0000';
             ctx.shadowBlur = 10;
             ctx.strokeStyle = `rgba(255, 0, 0, ${opacity * 0.5})`;
@@ -1263,13 +1240,13 @@ function drawBullets() {
                 ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Add a glow effect
+                
                 ctx.shadowColor = '#ff0000';
                 ctx.shadowBlur = 10;
                 ctx.beginPath();
                 ctx.arc(bullet.x, bullet.y, 7, 0, Math.PI * 2);
                 ctx.stroke();
-                ctx.shadowBlur = 0; // Reset shadow blur
+                ctx.shadowBlur = 0; 
         } else {
             ctx.fillStyle = '#f00';
             ctx.beginPath();
@@ -1284,21 +1261,19 @@ function drawPlayer() {
     ctx.translate(player.x, player.y);
     ctx.rotate(player.angle);
     ctx.beginPath();
-    ctx.moveTo(player.size / 2, 0); // Tip of the triangle
-    ctx.lineTo(-player.size / 2, -player.size / 2); // Bottom left corner
-    ctx.lineTo(-player.size / 2, player.size / 2); // Bottom right corner
+    ctx.moveTo(player.size / 2, 0);
+    ctx.lineTo(-player.size / 2, -player.size / 2);
+    ctx.lineTo(-player.size / 2, player.size / 2);
     ctx.closePath();
     ctx.fillStyle = ColorScheme.getPlayerColor();
     ctx.fill();
 
-    // Add an outline to the player
     ctx.strokeStyle = ColorScheme.getTextColor();
     ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.restore();
 
-    // Draw barrier if active and big boss is not present
     if (player.hasBarrier && !bigBoss) {
         const currentTime = Date.now();
         const timeLeft = powerupEndTime - currentTime;
@@ -1313,7 +1288,6 @@ function drawPlayer() {
         }
     }
 
-    // Add glow effect
     ctx.shadowBlur = 30;
     ctx.shadowColor = ColorScheme.getTextColor();
 }
@@ -1439,15 +1413,14 @@ function drawBossCounters() {
     ctx.fillStyle = ColorScheme.getTextColor();
     ctx.textAlign = 'right';
     
-    const bottomPadding = isMobile() ? 100 : 10; // Increase bottom padding for mobile
+    const bottomPadding = isMobile() ? 100 : 10;
     const rightPadding = 10;
     
-    // Adjust font size for mobile
     if (isMobile()) {
         ctx.font = '10px "Press Start 2P"';
     }
     
-    const lineHeight = isMobile() ? 20 : 25; // Reduce line height for mobile
+    const lineHeight = isMobile() ? 20 : 25; 
     
     ctx.fillText(`Stage 1 Bosses: ${stageOneBossesDestroyed}`, 
         canvas.width - rightPadding, 
@@ -1462,18 +1435,15 @@ let lastTime = 0;
 
 function movePlayer(currentTime) {
     if (!lastTime) lastTime = currentTime;
-    const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
+    const deltaTime = (currentTime - lastTime) / 1000;
     lastTime = currentTime;
 
-    // Calculate the speed multiplier
     const speedMultiplier = (player.hasBarrier && !bigBoss) ? BARRIER_SPEED_MULTIPLIER : 1;
 
     if (isMobile()) {
-        // Use the values set by the mobile controls
         player.x += player.dx * deltaTime * speedMultiplier;
         player.y += player.dy * deltaTime * speedMultiplier;
     } else {
-        // Desktop controls remain unchanged
         if (keys.ArrowLeft || keys.a) player.dx = -player.speed * speedMultiplier;
         else if (keys.ArrowRight || keys.d) player.dx = player.speed * speedMultiplier;
         else player.dx = 0;
@@ -1486,7 +1456,6 @@ function movePlayer(currentTime) {
         player.y += player.dy * deltaTime;
     }
 
-    // Ensure player stays within canvas boundaries
     player.x = Math.max(player.size / 2, Math.min(canvas.width - player.size / 2, player.x));
     player.y = Math.max(player.size / 2, Math.min(canvas.height - player.size / 2, player.y));
 }
@@ -1533,10 +1502,8 @@ function moveParticles() {
 }
 
 function spawnEnemy() {
-    //console.log("Current enemy count:", enemies.length);
     if (enemies.length >= MAX_ENEMIES) {
-        //console.log("Maximum enemies reached, not spawning new enemy");
-        return; // Don't spawn if we've reached the maximum
+        return;
     }
 
     if (!bigBoss && Math.random() < currentEnemySpawnChance) {
@@ -1590,9 +1557,9 @@ function createPlayerExplosion() {
         const speed = 1 + Math.random() * 5;
         let color;
         if (ColorScheme.current === 'light') {
-            color = `hsl(${Math.random() * 360}, 100%, 25%)`; // Darker colors for light mode
+            color = `hsl(${Math.random() * 360}, 100%, 25%)`;
         } else {
-            color = `hsl(${Math.random() * 360}, 100%, 50%)`; // Original bright colors
+            color = `hsl(${Math.random() * 360}, 100%, 50%)`;
         }
         particles.push({
             x: player.x,
@@ -1619,7 +1586,6 @@ function checkCollisions() {
                 if (!bullet) continue; // Ensure bullet is defined
                 
                 if (bullet.isLaser) {
-                    // Only process laser if it's still active
                     if (currentTime - bullet.creationTime < bullet.duration) {
                         const endX = bullet.x + bullet.dx * bullet.length;
                         const endY = bullet.y + bullet.dy * bullet.length;
@@ -1654,7 +1620,7 @@ function checkCollisions() {
         // Check collisions with stage-one bosses
         for (let i = stageOneBosses.length - 1; i >= 0; i--) {
             const stageOneBoss = stageOneBosses[i];
-            if (!stageOneBoss) continue; // Ensure stageOneBoss is defined
+            if (!stageOneBoss) continue;
             
             const playerDx = stageOneBoss.x - player.x;
             const playerDy = stageOneBoss.y - player.y;
@@ -1688,7 +1654,6 @@ function checkCollisions() {
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
                 if (distance < proj.size / 2 + 3) {
-                    // Only damage the projectile if it's not invulnerable
                     if (currentTime - proj.spawnTime > proj.invulnerableTime) {
                         createExplosion(bullet.x, bullet.y);
                         bullets.splice(i, 1);
@@ -1697,14 +1662,12 @@ function checkCollisions() {
                         if (proj.health <= 0) {
                             createGoldenExplosion(proj.x, proj.y);
                             bigBoss.projectiles.splice(j, 1);
-                            
-                            // Damage the big boss
                             bigBoss.health--;
                             //console.log("Big boss hit! Remaining health:", bigBoss.health);
                             
                             if (bigBoss.health <= 0) {
                                 bigBoss.defeated = true;
-                                bigBoss.shakeTime = 300; // 5 seconds at 60 FPS
+                                bigBoss.shakeTime = 300;
                                 //console.log("Big boss defeated!");
                             }
                         }
@@ -1740,7 +1703,6 @@ function checkCollisions() {
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     if (player.hasBarrier) {
-        // Use the barrier radius for collision detection
         const barrierRadius = player.size * 1.5;
         if (distance < barrierRadius + enemy.size / 2) {
             createExplosion(enemy.x, enemy.y);
@@ -1787,7 +1749,6 @@ function checkCollisions() {
     }
 }
 
-// Add this helper function for line-circle intersection
 function lineCircleIntersection(x1, y1, x2, y2, cx, cy, r) {
     const dx = x2 - x1;
     const dy = y2 - y1;
@@ -1837,16 +1798,13 @@ function updateTopPlayers() {
     const existingPlayerIndex = topPlayers.findIndex(p => p.name === player.name);
 
     if (existingPlayerIndex !== -1) {
-        // Update existing player's score if the new score is higher
         if (score > topPlayers[existingPlayerIndex].score) {
             topPlayers[existingPlayerIndex].score = score;
         }
     } else {
-        // Add new player
         topPlayers.push(newScore);
     }
 
-    // Sort and keep top 5
     topPlayers.sort((a, b) => b.score - a.score);
     topPlayers = topPlayers.slice(0, 5);
 
@@ -1863,7 +1821,6 @@ function updateHighScore() {
 
 function togglePause() {
     isPaused = !isPaused;
-    //console.log("Game paused state toggled. isPaused:", isPaused);
     if (isPaused) {
         showMenu();
     } else {
@@ -1908,7 +1865,7 @@ function gameLoop(currentTime) {
     } 
 
     if (!isPaused) {
-        updateColors(); // Add this line at the beginning of the game loop
+        updateColors();
         updatePlayerAngle(lastMousePosition.x, lastMousePosition.y);
         //console.log("Game is not paused, executing game logic");
         try {
@@ -1957,12 +1914,7 @@ function gameLoop(currentTime) {
             if (typeof drawParticles === 'function') drawParticles();
             if (typeof drawTopPlayers === 'function') drawTopPlayers();
             drawBossCounters();
-            drawScore();
-
-            //console.log("Current stageOneBossesDefeated:", stageOneBossesDefeated);
-            //console.log("Big boss exists:", !!bigBoss);
-            //console.log("Current score:", score);
-
+            drawScore()
             checkBigBossSpawn();
 
             if (bigBoss) {
@@ -2112,7 +2064,7 @@ function resumePowerups() {
         currentPowerup = powerup.type;
         powerupEndTime = Date.now() + powerup.remainingTime;
     }
-    // Adjust remaining time for powerups on the field
+
     powerups.forEach(powerup => {
         powerup.spawnTime += pauseDuration;
     });
@@ -2142,16 +2094,10 @@ function spawnBigBoss() {
         };
         //console.log("Big boss spawned:", bigBoss);
         
-        // Clear all enemies and stage-one bosses
     enemies = [];
     stageOneBosses = [];
-        
-        // Pause active powerups and clear field powerups
-        pausePowerups();
-        clearFieldPowerups();
-    } else {
-        //console.log("Not spawning big boss. Current conditions: bigBoss exists:", !!bigBoss, "stageOneBossesDefeated:", stageOneBossesDefeated);
-    }
+    pausePowerups();
+    clearFieldPowerups();
 }
 
 
@@ -2162,7 +2108,6 @@ function moveBigBoss() {
         bigBoss.y = player.y + Math.sin(bigBoss.orbitAngle) * bigBoss.orbitRadius;
         bigBoss.angle += bigBoss.rotationSpeed;
 
-        // Launch projectiles only if not defeated
         if (bigBoss.launchCooldown <= 0) {
             launchBigBossProjectile();
             bigBoss.launchCooldown = 300;
@@ -2170,16 +2115,14 @@ function moveBigBoss() {
             bigBoss.launchCooldown--;
         }
 
-        // Check if big boss health has reached 0
         if (bigBoss.health <= 0) {
             bigBoss.defeated = true;
-            bigBoss.shakeTime = 300; // 3 seconds
+            bigBoss.shakeTime = 300;
             bigBoss.projectiles = [];
             //console.log("Big boss defeated, projectiles cleared");
         }
     }
 
-    // Move projectiles only if big boss is not defeated
     if (bigBoss && !bigBoss.defeated) {
         const currentTime = Date.now();
         bigBoss.projectiles.forEach(proj => {
@@ -2188,7 +2131,6 @@ function moveBigBoss() {
             proj.y += Math.sin(angle) * proj.speed;
             proj.angle = angle;
 
-            // Update invulnerability
             if (currentTime - proj.spawnTime > proj.invulnerableTime) {
                 proj.invulnerable = false;
             }
@@ -2208,8 +2150,8 @@ function launchBigBossProjectile() {
         speed: 1.5,
         health: 5,
         color: ColorScheme.getRandomColor(),
-        invulnerableTime: 3000, // 3 seconds of invulnerability
-        spawnTime: Date.now() // Record spawn time
+        invulnerableTime: 3000,
+        spawnTime: Date.now()
     });
 }
 
@@ -2219,11 +2161,9 @@ function drawBigBoss() {
         ctx.translate(bigBoss.x, bigBoss.y);
         ctx.rotate(bigBoss.angle);
 
-        // Draw the golden glow
         ctx.shadowColor = 'gold';
         ctx.shadowBlur = 30;
 
-        // Draw the star
         ctx.fillStyle = bigBoss.defeated ? `rgba(255, 215, 0, ${bigBoss.shakeTime / 300})` : 'gold';
         ctx.beginPath();
         for (let i = 0; i < 5; i++) {
@@ -2242,7 +2182,6 @@ function drawBigBoss() {
 
         ctx.restore();
 
-        // Draw health bar only if not defeated
         if (!bigBoss.defeated) {
             const healthBarWidth = bigBoss.size * 1.5;
             const healthBarHeight = 10;
@@ -2259,7 +2198,6 @@ function drawBigBoss() {
             ctx.strokeRect(bigBoss.x - healthBarWidth / 2, bigBoss.y - bigBoss.size / 2 - 20, healthBarWidth, healthBarHeight);
         }
 
-        // Draw projectiles as stars
         const currentTime = Date.now();
         bigBoss.projectiles.forEach(proj => {
             ctx.save();
@@ -2268,7 +2206,7 @@ function drawBigBoss() {
 
             // Change color based on invulnerability
             if (currentTime - proj.spawnTime <= proj.invulnerableTime) {
-                ctx.strokeStyle = ColorScheme.getTextColor(); // White, semi-transparent for invulnerable state
+                ctx.strokeStyle = ColorScheme.getTextColor();
             } else {
                 ctx.strokeStyle = proj.color;
             }
@@ -2344,7 +2282,6 @@ function showGameOverScreen() {
     ctx.fillStyle = ColorScheme.getTextColor();
 
     if (isMobile()) {
-        // Mobile version
         ctx.font = '24px "Press Start 2P", cursive';
         ctx.fillText('GAME OVER', canvas.width / 2, centerY - 60);
         
@@ -2355,7 +2292,6 @@ function showGameOverScreen() {
         ctx.font = '12px "Press Start 2P", cursive';
         ctx.fillText('Tap to continue', canvas.width / 2, centerY + 60);
     } else {
-        // Desktop version (unchanged)
         ctx.font = '48px "Press Start 2P", cursive';
         ctx.fillText('GAME OVER', canvas.width / 2, centerY - 40);
         
