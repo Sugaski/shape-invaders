@@ -488,6 +488,25 @@ function hideMenu() {
     //console.log("Menu hidden. isPaused:", isPaused);
 }
 
+function startGame() {
+    console.log("Starting game...");
+    hideMenu();
+    resetGame();
+    resizeCanvas();
+    resetPlayerPosition();
+    isGameRunning = true;
+    isPaused = false;
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+    }
+    if (isMobile()) {
+        initMobileControls();
+    }
+    loadSettings();
+    updateMobileControlsColor();
+    animationFrameId = requestAnimationFrame(gameLoop);
+}
+
 function startNewGame() {
     console.log("Starting new game...");
     resetPlayerPosition();
@@ -2340,25 +2359,6 @@ function handleGameOverKeyPress(e) {
         window.removeEventListener('keydown', handleGameOverKeyPress);
         startNewGame();
     }
-}
-
-function startGame() {
-    console.log("Starting game...");
-    hideMenu();
-    resetGame();
-    resizeCanvas();
-    resetPlayerPosition();
-    isGameRunning = true;
-    isPaused = false;
-    if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-    }
-    if (isMobile()) {
-        initMobileControls();
-    }
-    loadSettings();
-    updateMobileControlsColor();
-    animationFrameId = requestAnimationFrame(gameLoop);
 }
 
 function resetGame() {
