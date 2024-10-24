@@ -736,8 +736,6 @@ function updateRadioButtonStyles() {
     
     radioButtons.forEach(radio => {
         radio.style.accentColor = textColor;
-        
-        // Create a style for the custom radio button
         const style = document.createElement('style');
         style.textContent = `
             #${radio.id}:checked::before {
@@ -753,6 +751,13 @@ function loadSettings() {
     ColorScheme.current = savedMode;
     applyColorMode(savedMode);
 }
+
+
+function initializeTopPlayers() {
+    topPlayers = JSON.parse(localStorage.getItem('topPlayers')) || [];
+    //console.log("Initialized top players:", topPlayers);
+}
+
 
 document.getElementById('confirmSettings').addEventListener('click', () => {
     const selectedMode = document.querySelector('input[name="colorMode"]:checked').value;
