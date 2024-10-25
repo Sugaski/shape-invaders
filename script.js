@@ -1037,6 +1037,9 @@ function moveStageOneBosses() {
 function checkStageOneBossCollisions() {
     for (let i = stageOneBosses.length - 1; i >= 0; i--) {
         const boss = stageOneBosses[i];
+        if (!boss) continue;
+
+        // Check collision with bullets and homing missiles
         for (let j = bullets.length - 1; j >= 0; j--) {
             const bullet = bullets[j];
             const dx = boss.x - bullet.x;
@@ -1046,27 +1049,68 @@ function checkStageOneBossCollisions() {
                 createExplosion(bullet.x, bullet.y);
                 bullets.splice(j, 1);
                 boss.health--;
-                //console.log("Mini-boss hit. Remaining health:", boss.health);
                 if (boss.health <= 0) {
                     createExplosion(boss.x, boss.y);
                     destroyStageOneBoss(i);
                     score += 50;
-                    spawnPowerup(boss.x, boss.y);
-                    //console.log("Stage-one boss destroyed. Total destroyed:", stageOneBossesDestroyed);
+                    break;
                 }
                 break;
+            }
+        }
+
+        // Check collision with laser beam
+        if (currentPowerup === 2) { 
+            bullets.forEach(bullet => {
+                if (bullet.isLaser) {
+                    const dx = boss.x - bullet.x;
+                    const dy = boss.y - bullet.y;
+                    const distance = Math.abs(dx * bullet.dy - dy * bullet.dx) / Math.sqrt(bullet.dx * bullet.dx + bullet.dy * bullet.dy);
+                    if (distance < boss.size / 2) {
+                        boss.health--;
+                        if (boss.health <= 0) {
+                            createExplosion(boss.x, boss.y);
+                            destroyStageOneBoss(i);
+                            score += 50;
+                        }
+                    }
+                }
+            });
+        }
+
+        // Check collision with player's barrier
+        if (player.hasBarrier) {
+            const barrierRadius = player.size * 1.5;
+            const dx = boss.x - player.x;
+            const dy = boss.y - player.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < barrierRadius + boss.size / 2) {
+                createExplosion(boss.x, boss.y);
+                destroyStageOneBoss(i);
+                chainReaction(boss.x, boss.y);
             }
         }
     }
 }
 
 function destroyStageOneBoss(index) {
+    const boss = stageOneBosses[index];
+    if (!boss) {
+        console.warn(`Attempted to destroy non-existent boss at index ${index}`);
+        return;
+    }
+    
+    const bossX = boss.x;
+    const bossY = boss.y;
+    
     stageOneBosses.splice(index, 1);
     stageOneBossesDestroyed++;
     stageOneBossesDefeated++;
     score += 50;
     currentEnemySpawnChance *= 1.2;
     currentEnemySpawnChance = Math.min(currentEnemySpawnChance, 0.1);
+
+    spawnPowerup(bossX, bossY);
 }
 
 function spawnPowerup(x, y) {
