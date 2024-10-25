@@ -18,7 +18,7 @@ function resizeCanvas() {
 
 function updateGameElementsSize() {
     const scaleFactor = isMobile() ? MOBILE_SCALE_FACTOR : 1;
-    player.size = isMobile() ? 35 * scaleFactor : 30; // Update player size for both mobile and desktop
+    player.size = isMobile() ? 35 * scaleFactor : 30;
     player.speed = 300 * scaleFactor;
     if (isMobile()) {
         player.x = Math.min(Math.max(player.x, player.size / 2), canvas.width - player.size / 2);
@@ -665,6 +665,13 @@ function showHighScores() {
     });
 }
 
+function updateSettingsMenu() {
+    const currentMode = ColorScheme.current;
+    document.getElementById('darkMode').checked = currentMode === 'dark';
+    document.getElementById('lightMode').checked = currentMode === 'light';
+    document.getElementById('colorblindMode').checked = currentMode === 'colorblind';
+}
+
 function showSettings() {
     if (isGameRunning) {
         isPaused = true;
@@ -673,6 +680,7 @@ function showSettings() {
     document.getElementById('menuScreen').style.display = 'none';
     document.getElementById('gameCanvas').style.display = 'none';
     hideMobileControls();
+    updateSettingsMenu();
 }
 
 function hideSettings() {
@@ -709,6 +717,7 @@ function applyColorMode(mode) {
     updateColors();
     updateRadioButtonStyles();
     updateMobileControlsColor();
+    updateSettingsMenu();
     
     const modals = document.querySelectorAll('.modal-content');
     modals.forEach(modal => {
@@ -769,9 +778,11 @@ function updateRadioButtonStyles() {
 }
 
 function loadSettings() {
-    const savedMode = localStorage.getItem('colorMode') || 'dark';
-    ColorScheme.current = savedMode;
-    applyColorMode(savedMode);
+    const savedMode = localStorage.getItem('colorMode');
+    if (savedMode) {
+        applyColorMode(savedMode);
+    }
+    updateSettingsMenu();
 }
 
 
@@ -938,18 +949,18 @@ function spawnStageOneBoss() {
         switch(side) {
             case 0: // Top
                 x = Math.random() * canvas.width;
-                y = -30; // Slightly off-screen
+                y = -30; 
                 break;
             case 1: // Right
-                x = canvas.width + 30; // Slightly off-screen
+                x = canvas.width + 30; 
                 y = Math.random() * canvas.height;
                 break;
             case 2: // Bottom
                 x = Math.random() * canvas.width;
-                y = canvas.height + 30; // Slightly off-screen
+                y = canvas.height + 30; 
                 break;
             case 3: // Left
-                x = -30; // Slightly off-screen
+                x = -30; 
                 y = Math.random() * canvas.height;
                 break;
         }
@@ -1134,7 +1145,7 @@ function drawPowerups() {
             ctx.save();
             
             // Create pulsing effect
-            const pulseScale = 1 + 0.2 * Math.sin(elapsedTime / 200); // Pulsing between 0.8 and 1.2 size
+            const pulseScale = 1 + 0.2 * Math.sin(elapsedTime / 200);
 
             // Draw outer glow
             const gradient = ctx.createRadialGradient(powerup.x, powerup.y, 5 * pulseScale, powerup.x, powerup.y, 30 * pulseScale);
@@ -2274,13 +2285,12 @@ function gameLoop(currentTime) {
     
                 if (stageTwoBoss.health <= 0 && !stageTwoBoss.defeated) {
                     stageTwoBoss.defeated = true;
-                    stageTwoBoss.shakeTime = 300; // 5 seconds at 60 FPS
+                    stageTwoBoss.shakeTime = 300;
                 }
     
                 if (stageTwoBoss.defeated) {
                     if (stageTwoBoss.shakeTime > 0) {
                         stageTwoBoss.shakeTime--;
-                        // Add shaking effect
                         ctx.save();
                         ctx.translate(Math.random() * 10 - 5, Math.random() * 10 - 5);
                         drawStageTwoBoss();
@@ -2289,7 +2299,7 @@ function gameLoop(currentTime) {
                         createGoldenExplosion(stageTwoBoss.x, stageTwoBoss.y);
                         lives += 3;
                         score += 3000;
-                        stageTwoBossesDestroyed++; // Add this line to increment the counter
+                        stageTwoBossesDestroyed++;
                         if (isMobile()) {
                             drawPlayerRank();
                         } else {
@@ -2301,12 +2311,12 @@ function gameLoop(currentTime) {
                 }
             }
 
-            // Update top players if score has changed
+            
             if (score > 0 && score % 10 === 0) {
                 updateTopPlayers();
             }
 
-            // Draw top players list or player rank based on device
+            
             if (isMobile()) {
                 drawPlayerRank();
             } else {
@@ -2330,7 +2340,7 @@ function gameLoop(currentTime) {
 const keys = {};
 
 window.addEventListener('keydown', e => {
-    keys[e.key.toLowerCase()] = true; // Convert to lowercase
+    keys[e.key.toLowerCase()] = true;
     updatePlayerVelocity();
     
     if (e.key === 'Escape') {
@@ -2352,7 +2362,7 @@ window.addEventListener('keydown', e => {
 });
 
 window.addEventListener('keyup', e => {
-    keys[e.key.toLowerCase()] = false; // Convert to lowercase
+    keys[e.key.toLowerCase()] = false; 
     updatePlayerVelocity();
 });
 
