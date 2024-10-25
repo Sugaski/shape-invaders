@@ -1,6 +1,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-let bigBoss = null;
+let stageTwoBoss = null;
+let stageTwoBossProjectiles = [];
 let moveStickActive = false;
 let aimStickActive = false;
 
@@ -32,9 +33,9 @@ function updateGameElementsSize() {
         boss.size *= scaleFactor;
     });
     
-    if (bigBoss) {
-        bigBoss.size *= scaleFactor;
-        bigBoss.orbitRadius *= scaleFactor;
+    if (stageTwoBoss) {
+        stageTwoBoss.size *= scaleFactor;
+        stageTwoBoss.orbitRadius *= scaleFactor;
     }
     
     bullets.forEach(bullet => {
@@ -60,9 +61,9 @@ function adjustGameElementsPositions() {
         boss.y = Math.min(Math.max(boss.y, boss.size / 2), canvas.height - boss.size / 2);
     });
 
-    if (bigBoss) {
-        bigBoss.x = Math.min(Math.max(bigBoss.x, bigBoss.size / 2), canvas.width - bigBoss.size / 2);
-        bigBoss.y = Math.min(Math.max(bigBoss.y, bigBoss.size / 2), canvas.height - bigBoss.size / 2);
+    if (stageTwoBoss) {
+        stageTwoBoss.x = Math.min(Math.max(stageTwoBoss.x, stageTwoBoss.size / 2), canvas.width - stageTwoBoss.size / 2);
+        stageTwoBoss.y = Math.min(Math.max(stageTwoBoss.y, stageTwoBoss.size / 2), canvas.height - stageTwoBoss.size / 2);
     }
 
     powerups.forEach(powerup => {
@@ -329,11 +330,11 @@ const menuScreen = document.getElementById('menuScreen');
 const gameCanvas = document.getElementById('gameCanvas');
 const MOBILE_ENEMY_SPEED_MULTIPLIER = 0.4;
 const MOBILE_STAGE_ONE_BOSS_SPEED_MULTIPLIER = 0.5;
-const MOBILE_BIG_BOSS_PROJECTILE_SPEED_MULTIPLIER = 0.4;
+const MOBILE_STAGE_TWO_BOSS_PROJECTILE_SPEED_MULTIPLIER = 0.4;
 const MOBILE_SPEED_MULTIPLIER = 1;
 const MOBILE_SCALE_FACTOR = 0.8;
-const BIG_BOSS_SPAWN_INTERVAL = 5; 
-const STAGE_ONE_BOSS_SPAWN_INTERVAL = 500;
+const STAGE_TWO_BOSS_SPAWN_INTERVAL = 5; 
+const STAGE_ONE_BOSS_SPAWN_INTERVAL = 50;
 const INITIAL_ENEMY_SPAWN_CHANCE = 0.02;
 const fireInterval = 225;
 const POWERUP_DURATION = 15000;
@@ -734,8 +735,8 @@ function updateColors() {
         }
     });
     
-    if (typeof bigBoss !== 'undefined' && bigBoss !== null && !bigBoss.color) {
-        bigBoss.color = ColorScheme.getRandomColor();
+    if (typeof stageTwoBoss !== 'undefined' && stageTwoBoss !== null && !stageTwoBoss.color) {
+        stageTwoBoss.color = ColorScheme.getRandomColor();
     }
     
     powerups.forEach(powerup => {
@@ -834,11 +835,11 @@ function resetGame() {
     powerups = [];
     currentPowerup = null;
     powerupEndTime = 0;
-    bigBoss = null;
+    stageTwoBoss = null;
     stageOneBossesDefeated = 0;
     projectilesDestroyed = 0;
     stageOneBossesDestroyed = 0;
-    bigBossesDestroyed = 0;
+    stageTwoBossesDestroyed = 0;
     lastFireTime = 0;
     currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
 }
@@ -914,8 +915,8 @@ function gameOver() {
     updateHighScore();
     updateTopPlayers();
     
-    bigBoss = null;
-    bigBossProjectiles = [];
+    stageTwoBoss = null;
+    stageTwoBossProjectiles = [];
     stageOneBossesDefeated = 0;
     
     showGameOverScreen();
@@ -929,7 +930,7 @@ function updateContinueButton() {
 function spawnStageOneBoss() {
     const spawnInterval = isMobile() ? 250 : STAGE_ONE_BOSS_SPAWN_INTERVAL;
     
-    if (!bigBoss && score > 0 && score % spawnInterval === 0 && stageOneBosses.length === 0) {
+    if (!stageTwoBoss && score > 0 && score % spawnInterval === 0 && stageOneBosses.length === 0) {
         let x, y;
         
         const side = Math.floor(Math.random() * 4);
@@ -975,9 +976,9 @@ function spawnStageOneBoss() {
     }
 }
 
-function checkBigBossSpawn() {
-    if (!bigBoss && stageOneBossesDefeated >= 3) {
-        spawnBigBoss();
+function checkStageTwoBossSpawn() {
+    if (!stageTwoBoss && stageOneBossesDefeated >= 3) {
+        spawnStageTwoBoss();
     }
 }
 
@@ -1117,7 +1118,7 @@ function drawPowerups() {
 }
 
 function updatePowerups() {
-    if (!bigBoss) {
+    if (!stageTwoBoss) {
         const currentTime = Date.now();
         powerups = powerups.filter(powerup => {
             return currentTime - powerup.spawnTime < POWERUP_DURATION;
@@ -1130,7 +1131,7 @@ function getPowerupColor(type) {
 }
 
 function checkPowerupCollisions() {
-    if (!bigBoss) {
+    if (!stageTwoBoss) {
         powerups.forEach((powerup, index) => {
             const dx = player.x - powerup.x;
             const dy = player.y - powerup.y;
@@ -1144,7 +1145,7 @@ function checkPowerupCollisions() {
 }
 
 function activatePowerup(type) {
-    if (!bigBoss) {
+    if (!stageTwoBoss) {
         // Deactivate current powerup if any
         if (currentPowerup) {
             deactivatePowerup(currentPowerup);
@@ -1156,7 +1157,7 @@ function activatePowerup(type) {
         }
         //console.log(`Powerup ${type} activated`);
     } else {
-        //console.log("Powerup not activated due to active big boss");
+        //console.log("Powerup not activated due to active stageTwo boss");
     }
 }
 
@@ -1169,7 +1170,7 @@ function deactivatePowerup(type) {
 }
 
 function updatePowerup() {
-    if (bigBoss) {
+    if (stageTwoBoss) {
         if (currentPowerup) {
             pausePowerup();
         }
@@ -1295,8 +1296,8 @@ function findClosestEnemy(bullet) {
     let closestDistance = Infinity;
     
     const allEnemies = enemies.concat(stageOneBosses);
-    if (bigBoss) {
-        allEnemies.push(bigBoss);
+    if (stageTwoBoss) {
+        allEnemies.push(stageTwoBoss);
     }
     
     for (let i = 0; i < allEnemies.length; i++) {
@@ -1408,7 +1409,7 @@ function drawPlayer() {
 
     ctx.restore();
 
-    if (player.hasBarrier && !bigBoss) {
+    if (player.hasBarrier && !stageTwoBoss) {
         const currentTime = Date.now();
         const timeLeft = powerupEndTime - currentTime;
         
@@ -1560,7 +1561,7 @@ function drawBossCounters() {
         canvas.width - rightPadding, 
         canvas.height - bottomPadding - lineHeight);
     
-    ctx.fillText(`Stage 2 Bosses: ${bigBossesDestroyed}`, 
+    ctx.fillText(`Stage 2 Bosses: ${stageTwoBossesDestroyed}`, 
         canvas.width - rightPadding, 
         canvas.height - bottomPadding);
 }
@@ -1572,7 +1573,7 @@ function movePlayer(currentTime) {
     const deltaTime = (currentTime - lastTime) / 1000;
     lastTime = currentTime;
 
-    const speedMultiplier = (player.hasBarrier && !bigBoss) ? BARRIER_SPEED_MULTIPLIER : 1;
+    const speedMultiplier = (player.hasBarrier && !stageTwoBoss) ? BARRIER_SPEED_MULTIPLIER : 1;
 
     if (isMobile()) {
         player.x += player.dx * deltaTime * speedMultiplier;
@@ -1640,7 +1641,7 @@ function spawnEnemy() {
         return;
     }
 
-    if (!bigBoss && Math.random() < currentEnemySpawnChance) {
+    if (!stageTwoBoss && Math.random() < currentEnemySpawnChance) {
         const x = Math.random() * canvas.width;
         const y = Math.random() * canvas.height;
         const angle = Math.random() * Math.PI * 2;
@@ -1783,13 +1784,13 @@ function checkCollisions() {
             }
         }
 
-    if (bigBoss) {
-        // Check collisions between bullets and big boss projectiles
+    if (stageTwoBoss) {
+        // Check collisions between bullets and stageTwoBoss projectiles
         const currentTime = Date.now();
         for (let i = bullets.length - 1; i >= 0; i--) {
-            for (let j = bigBoss.projectiles.length - 1; j >= 0; j--) {
+            for (let j = stageTwoBoss.projectiles.length - 1; j >= 0; j--) {
                 const bullet = bullets[i];
-                const proj = bigBoss.projectiles[j];
+                const proj = stageTwoBoss.projectiles[j];
                 const dx = bullet.x - proj.x;
                 const dy = bullet.y - proj.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -1802,14 +1803,14 @@ function checkCollisions() {
 
                         if (proj.health <= 0) {
                             createGoldenExplosion(proj.x, proj.y);
-                            bigBoss.projectiles.splice(j, 1);
-                            bigBoss.health--;
-                            //console.log("Big boss hit! Remaining health:", bigBoss.health);
+                            stageTwoBoss.projectiles.splice(j, 1);
+                            stageTwoBoss.health--;
+                            //console.log("stageTwoBoss hit! Remaining health:", stageTwoBoss.health);
                             
-                            if (bigBoss.health <= 0) {
-                                bigBoss.defeated = true;
-                                bigBoss.shakeTime = 300;
-                                //console.log("Big boss defeated!");
+                            if (stageTwoBoss.health <= 0) {
+                                stageTwoBoss.defeated = true;
+                                stageTwoBoss.shakeTime = 300;
+                                //console.log("stageTwoBoss defeated!");
                             }
                         }
                     }
@@ -1818,16 +1819,16 @@ function checkCollisions() {
             }
         }
 
-        // Check collisions between player and big boss projectiles
-        for (let i = bigBoss.projectiles.length - 1; i >= 0; i--) {
-            const proj = bigBoss.projectiles[i];
+        // Check collisions between player and stageTwoBoss projectiles
+        for (let i = stageTwoBoss.projectiles.length - 1; i >= 0; i--) {
+            const proj = stageTwoBoss.projectiles[i];
             const dx = player.x - proj.x;
             const dy = player.y - proj.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
             if (distance < player.size / 2 + proj.size / 2) {
                 createGoldenExplosion(proj.x, proj.y);
-                bigBoss.projectiles.splice(i, 1);
+                stageTwoBoss.projectiles.splice(i, 1);
                 loseLife();
                 if (lives <= 0) {
                     gameOver();
@@ -1863,20 +1864,20 @@ function checkCollisions() {
 }
 
 
-    // Check collision between player and big boss
-    if (bigBoss && !bigBoss.defeated) {
-        const dx = player.x - bigBoss.x;
-        const dy = player.y - bigBoss.y;
+    // Check collision between player and stageTwoBoss
+    if (stageTwoBoss && !stageTwoBoss.defeated) {
+        const dx = player.x - stageTwoBoss.x;
+        const dy = player.y - stageTwoBoss.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance < player.size / 2 + bigBoss.size / 2) {
+        if (distance < player.size / 2 + stageTwoBoss.size / 2) {
             loseLife();
             if (lives <= 0) return;
         }
 
-        // Check collisions between player and big boss projectiles
-        for (let i = bigBoss.projectiles.length - 1; i >= 0; i--) {
-            const proj = bigBoss.projectiles[i];
+        // Check collisions between player and stageTwoBoss projectiles
+        for (let i = stageTwoBoss.projectiles.length - 1; i >= 0; i--) {
+            const proj = stageTwoBoss.projectiles[i];
             const dx = player.x - proj.x;
             const dy = player.y - proj.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
@@ -1884,7 +1885,7 @@ function checkCollisions() {
             if (distance < player.size / 2 + proj.size / 2) {
                 loseLife();
                 createExplosion(proj.x, proj.y);
-                bigBoss.projectiles.splice(i, 1);
+                stageTwoBoss.projectiles.splice(i, 1);
                 if (lives <= 0) return;
             }
         }
@@ -1986,31 +1987,30 @@ function checkExtraLife() {
     }
 }
 
-function moveBigBoss() {
-    if (bigBoss && !bigBoss.defeated) {
-        bigBoss.orbitAngle += bigBoss.orbitSpeed;
-        bigBoss.x = player.x + Math.cos(bigBoss.orbitAngle) * bigBoss.orbitRadius;
-        bigBoss.y = player.y + Math.sin(bigBoss.orbitAngle) * bigBoss.orbitRadius;
-        bigBoss.angle += bigBoss.rotationSpeed;
+function moveStageTwoBoss() {
+    if (stageTwoBoss && !stageTwoBoss.defeated) {
+        stageTwoBoss.orbitAngle += stageTwoBoss.orbitSpeed;
+        stageTwoBoss.x = player.x + Math.cos(stageTwoBoss.orbitAngle) * stageTwoBoss.orbitRadius;
+        stageTwoBoss.y = player.y + Math.sin(stageTwoBoss.orbitAngle) * stageTwoBoss.orbitRadius;
+        stageTwoBoss.angle += stageTwoBoss.rotationSpeed;
 
-        if (bigBoss.launchCooldown <= 0) {
-            launchBigBossProjectile();
-            bigBoss.launchCooldown = 300;
+        if (stageTwoBoss.launchCooldown <= 0) {
+            launchStageTwoBossProjectile();
+            stageTwoBoss.launchCooldown = 300;
         } else {
-            bigBoss.launchCooldown--;
+            stageTwoBoss.launchCooldown--;
         }
 
-        if (bigBoss.health <= 0) {
-            bigBoss.defeated = true;
-            bigBoss.shakeTime = 300;
-            bigBoss.projectiles = [];
-            //console.log("Big boss defeated, projectiles cleared");
+        if (stageTwoBoss.health <= 0) {
+            stageTwoBoss.defeated = true;
+            stageTwoBoss.shakeTime = 300;
+            stageTwoBoss.projectiles = [];
         }
     }
 
-    if (bigBoss && !bigBoss.defeated) {
+    if (stageTwoBoss && !stageTwoBoss.defeated) {
         const currentTime = Date.now();
-        bigBoss.projectiles.forEach(proj => {
+        stageTwoBoss.projectiles.forEach(proj => {
             const angle = Math.atan2(player.y - proj.y, player.x - proj.x);
             proj.x += Math.cos(angle) * proj.speed;
             proj.y += Math.sin(angle) * proj.speed;
@@ -2023,13 +2023,13 @@ function moveBigBoss() {
     }
 }
 
-function launchBigBossProjectile() {
-    const angle = Math.atan2(player.y - bigBoss.y, player.x - bigBoss.x);
+function launchStageTwoBossProjectile() {
+    const angle = Math.atan2(player.y - stageTwoBoss.y, player.x - stageTwoBoss.x);
     const baseSize = 30;
     const size = isMobile() ? baseSize * MOBILE_SCALE_FACTOR : baseSize;
-    bigBoss.projectiles.push({
-        x: bigBoss.x,
-        y: bigBoss.y,
+    stageTwoBoss.projectiles.push({
+        x: stageTwoBoss.x,
+        y: stageTwoBoss.y,
         size: size,
         angle: angle,
         speed: 1.5,
@@ -2040,26 +2040,26 @@ function launchBigBossProjectile() {
     });
 }
 
-function drawBigBoss() {
-    if (bigBoss) {
+function drawStageTwoBoss() {
+    if (stageTwoBoss) {
         ctx.save();
-        ctx.translate(bigBoss.x, bigBoss.y);
-        ctx.rotate(bigBoss.angle);
+        ctx.translate(stageTwoBoss.x, stageTwoBoss.y);
+        ctx.rotate(stageTwoBoss.angle);
 
         ctx.shadowColor = 'gold';
         ctx.shadowBlur = 30;
 
-        ctx.fillStyle = bigBoss.defeated ? `rgba(255, 215, 0, ${bigBoss.shakeTime / 300})` : 'gold';
+        ctx.fillStyle = stageTwoBoss.defeated ? `rgba(255, 215, 0, ${stageTwoBoss.shakeTime / 300})` : 'gold';
         ctx.beginPath();
         for (let i = 0; i < 5; i++) {
             const angle = (i * 4 * Math.PI / 5) - Math.PI / 2;
-            const outerX = Math.cos(angle) * bigBoss.size / 2;
-            const outerY = Math.sin(angle) * bigBoss.size / 2;
+            const outerX = Math.cos(angle) * stageTwoBoss.size / 2;
+            const outerY = Math.sin(angle) * stageTwoBoss.size / 2;
             ctx.lineTo(outerX, outerY);
 
             const innerAngle = angle + Math.PI / 5;
-            const innerX = Math.cos(innerAngle) * bigBoss.size / 4;
-            const innerY = Math.sin(innerAngle) * bigBoss.size / 4;
+            const innerX = Math.cos(innerAngle) * stageTwoBoss.size / 4;
+            const innerY = Math.sin(innerAngle) * stageTwoBoss.size / 4;
             ctx.lineTo(innerX, innerY);
         }
         ctx.closePath();
@@ -2067,24 +2067,24 @@ function drawBigBoss() {
 
         ctx.restore();
 
-        if (!bigBoss.defeated) {
-            const healthBarWidth = bigBoss.size * 1.5;
+        if (!stageTwoBoss.defeated) {
+            const healthBarWidth = stageTwoBoss.size * 1.5;
             const healthBarHeight = 10;
-            const healthPercentage = bigBoss.health / bigBoss.maxHealth;
+            const healthPercentage = stageTwoBoss.health / stageTwoBoss.maxHealth;
             
             ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-            ctx.fillRect(bigBoss.x - healthBarWidth / 2, bigBoss.y - bigBoss.size / 2 - 20, healthBarWidth, healthBarHeight);
+            ctx.fillRect(stageTwoBoss.x - healthBarWidth / 2, stageTwoBoss.y - stageTwoBoss.size / 2 - 20, healthBarWidth, healthBarHeight);
             
             ctx.fillStyle = 'rgba(0, 255, 0, 0.7)';
-            ctx.fillRect(bigBoss.x - healthBarWidth / 2, bigBoss.y - bigBoss.size / 2 - 20, healthBarWidth * healthPercentage, healthBarHeight);
+            ctx.fillRect(stageTwoBoss.x - healthBarWidth / 2, stageTwoBoss.y - stageTwoBoss.size / 2 - 20, healthBarWidth * healthPercentage, healthBarHeight);
             
             ctx.strokeStyle = ColorScheme.getTextColor();
             ctx.lineWidth = 2;
-            ctx.strokeRect(bigBoss.x - healthBarWidth / 2, bigBoss.y - bigBoss.size / 2 - 20, healthBarWidth, healthBarHeight);
+            ctx.strokeRect(stageTwoBoss.x - healthBarWidth / 2, stageTwoBoss.y - stageTwoBoss.size / 2 - 20, healthBarWidth, healthBarHeight);
         }
 
         const currentTime = Date.now();
-        bigBoss.projectiles.forEach(proj => {
+        stageTwoBoss.projectiles.forEach(proj => {
             ctx.save();
             ctx.translate(proj.x, proj.y);
             ctx.rotate(proj.angle);
@@ -2134,8 +2134,7 @@ function createGoldenExplosion(x, y) {
     }
 }
 
-function resetAfterBigBoss() {
-    //console.log("Resetting game state after big boss defeat");
+function resetAfterStageTwoBoss() {
     stageOneBossesDefeated = 0;
     currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
     resumePowerups();
@@ -2186,8 +2185,8 @@ function gameLoop(currentTime) {
             if (typeof moveEnemies === 'function') moveEnemies();
             if (typeof moveStageOneBosses === 'function') moveStageOneBosses();
             if (typeof moveParticles === 'function') moveParticles();
-            if (typeof moveBigBoss === 'function') moveBigBoss();
-            if (typeof moveBigBossProjectiles === 'function') moveBigBossProjectiles();
+            if (typeof moveStageTwoBoss === 'function') moveStageTwoBoss();
+            if (typeof moveStageTwoBossProjectiles === 'function') moveStageTwoBossProjectiles();
                 
             //console.log("Spawning entities");
             if (typeof spawnEnemy === 'function') spawnEnemy();
@@ -2197,8 +2196,8 @@ function gameLoop(currentTime) {
             updateSpatialPartitioning();
             checkCollisions();
             if (typeof checkStageOneBossCollisions === 'function') checkStageOneBossCollisions();
-            if (typeof checkBigBossProjectileCollisions === 'function') checkBigBossProjectileCollisions();
-            if (typeof checkBigBossCollisions === 'function') checkBigBossCollisions();
+            if (typeof checkstageTwoBossProjectileCollisions === 'function') checkstageTwoBossProjectileCollisions();
+            if (typeof checkstageTwoBossCollisions === 'function') checkstageTwoBossCollisions();
             if (typeof checkPowerupCollisions === 'function') checkPowerupCollisions();
                 
             //console.log("Updating game state");
@@ -2216,47 +2215,44 @@ function gameLoop(currentTime) {
             if (typeof drawBullets === 'function') drawBullets();
             if (typeof drawEnemies === 'function') drawEnemies();
             if (typeof drawStageOneBosses === 'function') drawStageOneBosses();
-            if (typeof drawBigBoss === 'function') drawBigBoss();
-            if (typeof drawBigBossProjectiles === 'function') drawBigBossProjectiles();
+            if (typeof drawStageTwoBoss === 'function') drawStageTwoBoss();
+            if (typeof drawStageTwoBossProjectiles === 'function') drawStageTwoBossProjectiles(); 
             if (typeof drawPowerups === 'function') drawPowerups();
             if (typeof drawParticles === 'function') drawParticles();
             if (typeof drawTopPlayers === 'function') drawTopPlayers();
             drawBossCounters();
             drawScore()
-            checkBigBossSpawn();
+            checkStageTwoBossSpawn();
 
-            if (bigBoss) {
-                //console.log("Updating big boss");
-                moveBigBoss();
-                drawBigBoss();
-
-                if (bigBoss.health <= 0 && !bigBoss.defeated) {
-                    bigBoss.defeated = true;
-                    bigBoss.shakeTime = 300; // 5 seconds at 60 FPS
-                    //console.log("Big boss defeated, starting shake animation");
+            if (stageTwoBoss) {
+                moveStageTwoBoss();
+                drawStageTwoBoss();
+    
+                if (stageTwoBoss.health <= 0 && !stageTwoBoss.defeated) {
+                    stageTwoBoss.defeated = true;
+                    stageTwoBoss.shakeTime = 300; // 5 seconds at 60 FPS
                 }
-
-                if (bigBoss.defeated) {
-                    if (bigBoss.shakeTime > 0) {
-                        bigBoss.shakeTime--;
+    
+                if (stageTwoBoss.defeated) {
+                    if (stageTwoBoss.shakeTime > 0) {
+                        stageTwoBoss.shakeTime--;
                         // Add shaking effect
                         ctx.save();
                         ctx.translate(Math.random() * 10 - 5, Math.random() * 10 - 5);
-                        drawBigBoss();
+                        drawStageTwoBoss();
                         ctx.restore();
                     } else {
-                        createGoldenExplosion(bigBoss.x, bigBoss.y);
+                        createGoldenExplosion(stageTwoBoss.x, stageTwoBoss.y);
                         lives += 3;
                         score += 3000;
-                        bigBossesDestroyed++; // Add this line to increment the counter
+                        stageTwoBossesDestroyed++; // Add this line to increment the counter
                         if (isMobile()) {
                             drawPlayerRank();
                         } else {
                             drawTopPlayersList();
                         }
-                        bigBoss = null;
-                        resetAfterBigBoss();
-                        //console.log("Big boss exploded and removed. Total big bosses destroyed:", bigBossesDestroyed);
+                        stageTwoBoss = null;
+                        resetAfterStageTwoBoss();
                     }
                 }
             }
@@ -2381,12 +2377,11 @@ function resumePowerups() {
     });
 }
 
-function spawnBigBoss() {
-    //console.log("spawnBigBoss function called. stageOneBossesDefeated:", stageOneBossesDefeated);
-    if (!bigBoss && stageOneBossesDefeated >= 5) {
+function spawnStageTwoBoss() {
+    if (!stageTwoBoss && stageOneBossesDefeated >= 5) {
         const baseSize = 200;
         const size = isMobile() ? baseSize * MOBILE_SCALE_FACTOR : baseSize;
-        bigBoss = {
+        stageTwoBoss = {
             x: canvas.width / 2,
             y: canvas.height / 2,
             size: 200,
@@ -2403,12 +2398,12 @@ function spawnBigBoss() {
             defeated: false,
             projectiles: []
         };
-        //console.log("Big boss spawned:", bigBoss);
         
-    enemies = [];
-    stageOneBosses = [];
-    pausePowerups();
-    clearFieldPowerups();
+        enemies = [];
+        stageOneBosses = [];
+        pausePowerups();
+        clearFieldPowerups();
+    }
 }
 
 function gameOver() {
@@ -2443,11 +2438,11 @@ function resetGame() {
     powerups = [];
     currentPowerup = null;
     powerupEndTime = 0;
-    bigBoss = null;
+    stageTwoBoss = null;
     stageOneBossesDefeated = 0;
     projectilesDestroyed = 0;
     stageOneBossesDestroyed = 0;
-    bigBossesDestroyed = 0;
+    stageTwoBossesDestroyed = 0;
     lastFireTime = 0;
     currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
 }
@@ -2499,4 +2494,3 @@ function drawTopPlayers() {
     }
 }
 
-}
