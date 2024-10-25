@@ -1740,14 +1740,6 @@ function checkCollisions() {
                 loseLife();
             }
         }
-        
-    } catch (error) {
-        console.error("Error in checkCollisions:", error);
-        console.log("Current game state:", { 
-            enemies: enemies.map(e => e ? { x: e.x, y: e.y } : null),
-            bullets: bullets.map(b => b ? { x: b.x, y: b.y } : null)
-        });
-    }
 
     if (bigBoss) {
         // Check collisions between bullets and big boss projectiles
@@ -1805,6 +1797,7 @@ function checkCollisions() {
    // Check collisions between player and enemies
    for (let i = enemies.length - 1; i >= 0; i--) {
     const enemy = enemies[i];
+    if (!enemy) continue;
     const dx = player.x - enemy.x;
     const dy = player.y - enemy.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
@@ -1854,6 +1847,14 @@ function checkCollisions() {
             }
         }
     }
+    
+} catch (error) {
+    console.error("Error in checkCollisions:", error);
+    console.log("Current game state:", { 
+        enemies: enemies.map(e => e ? { x: e.x, y: e.y } : null),
+        bullets: bullets.map(b => b ? { x: b.x, y: b.y } : null)
+    });
+}
 }
 
 function lineCircleIntersection(x1, y1, x2, y2, cx, cy, r) {
