@@ -349,6 +349,7 @@ const player = {
     dy: 0,
     angle: 0
 };
+const GRID_SIZE = 100;
 const ColorScheme = {
     dark: {
         text: '#0f0',
@@ -387,6 +388,7 @@ const ColorScheme = {
     }
 };
 
+let grid = {};
 let currentEnemySpawnChance = INITIAL_ENEMY_SPAWN_CHANCE;
 let lastMousePosition = { x: 0, y: 0 };
 let aimAngle = 0;
@@ -1311,26 +1313,47 @@ function findClosestEnemy(bullet) {
     return closestEnemy;
 }
 
+function updateSpatialPartitioning() {
+    grid = {};
+    enemies.forEach(enemy => {
+        const gridX = Math.floor(enemy.x / GRID_SIZE);
+        const gridY = Math.floor(enemy.y / GRID_SIZE);
+        const key = `${gridX},${gridY}`;
+        if (!grid[key]) {
+            grid[key] = [];
+        }
+        grid[key].push(enemy);
+    });
+}
+
+function getNeighboringEnemies(x, y) {
+    const gridX = Math.floor(x / GRID_SIZE);
+    const gridY = Math.floor(y / GRID_SIZE);
+    const neighbors = [];
+    for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+            const key = `${gridX + i},${gridY + j}`;
+            if (grid[key]) {
+                neighbors.push(...grid[key]);
+            }
+        }
+    }
+    return neighbors;
+}
+
 function drawBullets() {
     const currentTime = Date.now();
     bullets.forEach(bullet => {
         if (bullet.isLaser) {
+            if (!ctx.laserPath) {
+                ctx.laserPath = new Path2D();
+            }
             const elapsedTime = currentTime - bullet.creationTime;
             const opacity = 1 - (elapsedTime / bullet.duration);
-            ctx.strokeStyle = `rgba(255, 0, 0, ${opacity})`; 
-            ctx.lineWidth = 8;
-            ctx.beginPath();
-            ctx.moveTo(bullet.x, bullet.y);
             const endX = bullet.x + bullet.dx * bullet.length;
             const endY = bullet.y + bullet.dy * bullet.length;
-            ctx.lineTo(endX, endY);
-            ctx.stroke();
-
-            ctx.shadowColor = '#ff0000';
-            ctx.shadowBlur = 10;
-            ctx.strokeStyle = `rgba(255, 0, 0, ${opacity * 0.5})`;
-            ctx.lineWidth = 12;
-            ctx.stroke();
+            ctx.laserPath.moveTo(bullet.x, bullet.y);
+            ctx.laserPath.lineTo(endX, endY);
         } else if (bullet.isHoning) {
             ctx.fillStyle = '#ff0000';
                 ctx.beginPath();
@@ -1351,6 +1374,20 @@ function drawBullets() {
             ctx.fill();
         }
     });
+
+    if (ctx.laserPath) {
+        ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+        ctx.lineWidth = 8;
+        ctx.stroke(ctx.laserPath);
+
+        ctx.shadowColor = '#ff0000';
+        ctx.shadowBlur = 10;
+        ctx.strokeStyle = 'rgba(255, 0, 0, 0.25)';
+        ctx.lineWidth = 12;
+        ctx.stroke(ctx.laserPath);
+
+        ctx.laserPath = null;
+    }
 }
 
 function drawPlayer() {
@@ -1674,6 +1711,9 @@ function checkCollisions() {
     try {
         const currentTime = Date.now();
         
+        const laserBullets = bullets.filter(bullet => bullet.isLaser);
+        const regularBullets = bullets.filter(bullet => !bullet.isLaser);
+
         for (let i = enemies.length - 1; i >= 0; i--) {
             const enemy = enemies[i];
             if (!enemy) {
@@ -1681,36 +1721,38 @@ function checkCollisions() {
                 continue;
             }
             
-            for (let j = bullets.length - 1; j >= 0; j--) {
-                const bullet = bullets[j];
+            // Check collisions with regular bullets
+            for (let j = regularBullets.length - 1; j >= 0; j--) {
+                const bullet = regularBullets[j];
                 if (!bullet) {
                     console.warn(`Undefined bullet at index ${j}`);
                     continue;
                 }
                 
-                if (bullet.isLaser) {
-                    if (currentTime - bullet.creationTime < bullet.duration) {
-                        const endX = bullet.x + bullet.dx * bullet.length;
-                        const endY = bullet.y + bullet.dy * bullet.length;
-                        
-                        if (lineCircleIntersection(bullet.x, bullet.y, endX, endY, enemy.x, enemy.y, enemy.size / 2)) {
-                            createExplosion(enemy.x, enemy.y);
-                            enemies.splice(i, 1);
-                            score += 10;
-                            updateHighScore();
-                            checkExtraLife();
-                            break;
-                        }
-                    }
-                } else {
-                    // Regular bullet collision detection
-                    const dx = enemy.x - bullet.x;
-                    const dy = enemy.y - bullet.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < enemy.size / 2 + 3) {
+                // Regular bullet collision detection
+                const dx = enemy.x - bullet.x;
+                const dy = enemy.y - bullet.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < enemy.size / 2 + 3) {
+                    createExplosion(enemy.x, enemy.y);
+                    enemies.splice(i, 1);
+                    bullets.splice(j, 1);
+                    score += 10;
+                    updateHighScore();
+                    checkExtraLife();
+                    break;
+                }
+            }
+
+            for (let j = laserBullets.length - 1; j >= 0; j--) {
+                const bullet = laserBullets[j];
+                if (currentTime - bullet.creationTime < bullet.duration) {
+                    const endX = bullet.x + bullet.dx * bullet.length;
+                    const endY = bullet.y + bullet.dy * bullet.length;
+                    
+                    if (lineCircleIntersection(bullet.x, bullet.y, endX, endY, enemy.x, enemy.y, enemy.size / 2)) {
                         createExplosion(enemy.x, enemy.y);
                         enemies.splice(i, 1);
-                        bullets.splice(j, 1);
                         score += 10;
                         updateHighScore();
                         checkExtraLife();
@@ -2152,7 +2194,8 @@ function gameLoop(currentTime) {
             if (typeof spawnStageOneBoss === 'function') spawnStageOneBoss();
                 
             //console.log("Checking collisions");
-            if (typeof checkCollisions === 'function') checkCollisions();
+            updateSpatialPartitioning();
+            checkCollisions();
             if (typeof checkStageOneBossCollisions === 'function') checkStageOneBossCollisions();
             if (typeof checkBigBossProjectileCollisions === 'function') checkBigBossProjectileCollisions();
             if (typeof checkBigBossCollisions === 'function') checkBigBossCollisions();
